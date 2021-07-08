@@ -18,6 +18,7 @@ import {Errors} from '../libraries/helpers/Errors.sol';
 import {ValidationLogic} from '../libraries/logic/ValidationLogic.sol';
 import {DataTypes} from '../libraries/types/DataTypes.sol';
 import {LendingPoolStorage} from './LendingPoolStorage.sol';
+import {INonfungiblePositionManager} from '../../dependencies/uniswap/contracts/INonfungiblePositionManager.sol';
 
 
 /**
@@ -88,7 +89,7 @@ contract LendingPoolCollateralManager is
   ) external override returns (uint256, string memory) {
 
     /* Could be replaced with the address of the uniswap v3 nft smart contract, no problem here */
-    DataTypes.ReserveData storage collateralReserve = [collateralAsset];
+    DataTypes.ReserveData storage collateralReserve = _reserves[collateralAsset];
 
     /* Could be replaced with the address of the uniswap v3 nft smart contract, no problem here */
     DataTypes.ReserveData storage debtReserve = _reserves[debtAsset];
