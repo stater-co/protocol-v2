@@ -18,6 +18,7 @@ import {Errors} from '../libraries/helpers/Errors.sol';
 import {ValidationLogic} from '../libraries/logic/ValidationLogic.sol';
 import {DataTypes} from '../libraries/types/DataTypes.sol';
 import {LendingPoolStorage} from './LendingPoolStorage.sol';
+import {ERC721} from '../../dependencies/openzeppelin/contracts/ERC721/ERC721.sol';
 
 /**
  * @title LendingPoolCollateralManager contract
