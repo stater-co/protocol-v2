@@ -86,8 +86,14 @@ contract LendingPoolCollateralManager is
     uint256 debtToCover,
     bool receiveAToken
   ) external override returns (uint256, string memory) {
-    DataTypes.ReserveData storage collateralReserve = _reserves[collateralAsset];
+
+    /* To discuss, not yet sure if it needs changes or not */
+    DataTypes.ReserveData storage collateralReserve = [collateralAsset];
+
+    /* To discuss, not yet sure if it needs changes or not */
     DataTypes.ReserveData storage debtReserve = _reserves[debtAsset];
+    
+    /* Doesn't need changes */
     DataTypes.UserConfigurationMap storage userConfig = _usersConfig[user];
 
     LiquidationCallLocalVars memory vars;
