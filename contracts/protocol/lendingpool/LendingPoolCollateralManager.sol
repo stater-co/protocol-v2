@@ -87,10 +87,10 @@ contract LendingPoolCollateralManager is
     bool receiveAToken
   ) external override returns (uint256, string memory) {
 
-    /* To discuss, not yet sure if it needs changes or not */
+    /* Could be replaced with the address of the uniswap v3 nft smart contract, no problem here */
     DataTypes.ReserveData storage collateralReserve = [collateralAsset];
 
-    /* To discuss, not yet sure if it needs changes or not */
+    /* Could be replaced with the address of the uniswap v3 nft smart contract, no problem here */
     DataTypes.ReserveData storage debtReserve = _reserves[debtAsset];
     
     /* Doesn't need changes */
