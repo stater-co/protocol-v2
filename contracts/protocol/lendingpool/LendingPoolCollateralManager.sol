@@ -19,6 +19,7 @@ import {ValidationLogic} from '../libraries/logic/ValidationLogic.sol';
 import {DataTypes} from '../libraries/types/DataTypes.sol';
 import {LendingPoolStorage} from './LendingPoolStorage.sol';
 import {INonfungiblePositionManager} from '../../dependencies/uniswap/contracts/INonfungiblePositionManager.sol';
+import {IERC721} from '../../dependencies/openzeppelin/contracts/token/ERC721/IERC721.sol';
 
 
 /**
@@ -37,7 +38,12 @@ contract LendingPoolCollateralManager is
   using SafeMath for uint256;
   using WadRayMath for uint256;
   using PercentageMath for uint256;
-
+  INonfungiblePositionManager nonfungiblePositionManager;
+  
+  constructor(address nonfungiblePositionManagerAddress) public {
+      nonfungiblePositionManager = INonfungiblePositionManager(nonfungiblePositionManagerAddress);
+  }
+ 
   uint256 internal constant LIQUIDATION_CLOSE_FACTOR_PERCENT = 5000;
 
   struct LiquidationCallLocalVars {
@@ -74,25 +80,26 @@ contract LendingPoolCollateralManager is
    * - The caller (liquidator) covers `debtToCover` amount of debt of the user getting liquidated, and receives
    *   a proportionally amount of the `collateralAsset` plus a bonus to cover market risk
    * @param collateralAsset The address of the underlying asset used as collateral, to receive as result of the liquidation
-   * @param debtAsset The address of the underlying borrowed asset to be repaid with the liquidation
+   * debtAsset The address of the underlying borrowed asset to be repaid with the liquidation
    * @param user The address of the borrower getting liquidated
-   * @param debtToCover The debt amount of borrowed `asset` the liquidator wants to cover
+   * debtToCover The debt amount of borrowed `asset` the liquidator wants to cover
    * @param receiveAToken `true` if the liquidators wants to receive the collateral aTokens, `false` if he wants
    * to receive the underlying collateral asset directly
    **/
   function liquidationCall(
-    address collateralAsset,
-    address debtAsset,
+    address collateralAsset, // >> this will be the nft smart contract address
+    // address debtAsset,
     address user,
-    uint256 debtToCover,
+    //uint256 debtToCover, // >> this will become the nft id
+    uint256 nftId,
     bool receiveAToken
   ) external override returns (uint256, string memory) {
 
     /* Could be replaced with the address of the uniswap v3 nft smart contract, no problem here */
     DataTypes.ReserveData storage collateralReserve = _reserves[collateralAsset];
 
-    /* Could be replaced with the address of the uniswap v3 nft smart contract, no problem here */
-    DataTypes.ReserveData storage debtReserve = _reserves[debtAsset];
+    /* DataTypes.ReserveData storage debtReserve = _reserves[debtAsset]; */
+    DataTypes.ReserveData storage debtReserve = _reserves[collateralAsset];
     
     /* Doesn't need changes */
     DataTypes.UserConfigurationMap storage userConfig = _usersConfig[user];
@@ -131,9 +138,24 @@ contract LendingPoolCollateralManager is
       LIQUIDATION_CLOSE_FACTOR_PERCENT
     );
 
-    vars.actualDebtToLiquidate = debtToCover > vars.maxLiquidatableDebt
+    (
+        uint96 nonce, 
+        address operator, 
+        address token0, 
+        address token1, 
+        uint24 fee, 
+        int24 tickLower, 
+        int24 tickUpper,
+        uint128 liquidity,
+        uint256 feeGrowthInside0LastX128,
+        uint256 feeGrowthInside1LastX128,
+        uint128 tokensOwed0,
+        uint128 tokensOwed1 
+    ) = nonfungiblePositionManager.positions(nftId);
+
+    vars.actualDebtToLiquidate = liquidity > vars.maxLiquidatableDebt
       ? vars.maxLiquidatableDebt
-      : debtToCover;
+      : liquidity;
 
     (
       vars.maxCollateralToLiquidate,
@@ -142,7 +164,7 @@ contract LendingPoolCollateralManager is
       collateralReserve,
       debtReserve,
       collateralAsset,
-      debtAsset,
+      liquidity,
       vars.actualDebtToLiquidate,
       vars.userCollateralBalance
     );
@@ -192,7 +214,7 @@ contract LendingPoolCollateralManager is
     }
 
     debtReserve.updateInterestRates(
-      debtAsset,
+      nonfungiblePositionManager.positions(nftId),
       debtReserve.aTokenAddress,
       vars.actualDebtToLiquidate,
       0
@@ -233,7 +255,8 @@ contract LendingPoolCollateralManager is
     }
 
     // Transfers the debt asset being repaid to the aToken, where the liquidity is kept
-    IERC20(debtAsset).safeTransferFrom(
+    
+    IERC721(nonfungiblePositionManager.positions(nftId)).safeTransferFrom(
       msg.sender,
       debtReserve.aTokenAddress,
       vars.actualDebtToLiquidate
@@ -241,7 +264,7 @@ contract LendingPoolCollateralManager is
 
     emit LiquidationCall(
       collateralAsset,
-      debtAsset,
+      nonfungiblePositionManager.positions(nftId),
       user,
       vars.actualDebtToLiquidate,
       vars.maxCollateralToLiquidate,
