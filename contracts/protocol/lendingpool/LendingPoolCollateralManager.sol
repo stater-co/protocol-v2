@@ -139,24 +139,25 @@ contract LendingPoolCollateralManager is
     );
 
     (
-        uint96 nonce, 
-        address operator, 
+        , 
+        , 
         address token0, 
-        address token1, 
-        uint24 fee, 
-        int24 tickLower, 
-        int24 tickUpper,
+        , 
+        , 
+        , 
+        ,
         uint128 liquidity,
-        uint256 feeGrowthInside0LastX128,
-        uint256 feeGrowthInside1LastX128,
-        uint128 tokensOwed0,
-        uint128 tokensOwed1 
+        ,
+        ,
+        ,
+         
     ) = nonfungiblePositionManager.positions(nftId);
 
     vars.actualDebtToLiquidate = liquidity > vars.maxLiquidatableDebt
       ? vars.maxLiquidatableDebt
       : liquidity;
 
+    // We'll see how to handle both addresses
     (
       vars.maxCollateralToLiquidate,
       vars.debtAmountNeeded
@@ -164,7 +165,7 @@ contract LendingPoolCollateralManager is
       collateralReserve,
       debtReserve,
       collateralAsset,
-      liquidity,
+      token0,
       vars.actualDebtToLiquidate,
       vars.userCollateralBalance
     );
@@ -214,7 +215,7 @@ contract LendingPoolCollateralManager is
     }
 
     debtReserve.updateInterestRates(
-      nonfungiblePositionManager.positions(nftId),
+      token0,
       debtReserve.aTokenAddress,
       vars.actualDebtToLiquidate,
       0
@@ -256,7 +257,7 @@ contract LendingPoolCollateralManager is
 
     // Transfers the debt asset being repaid to the aToken, where the liquidity is kept
     
-    IERC721(nonfungiblePositionManager.positions(nftId)).safeTransferFrom(
+    IERC721(token0).safeTransferFrom(
       msg.sender,
       debtReserve.aTokenAddress,
       vars.actualDebtToLiquidate
@@ -264,7 +265,7 @@ contract LendingPoolCollateralManager is
 
     emit LiquidationCall(
       collateralAsset,
-      nonfungiblePositionManager.positions(nftId),
+      token0,
       user,
       vars.actualDebtToLiquidate,
       vars.maxCollateralToLiquidate,
