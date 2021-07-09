@@ -140,8 +140,8 @@ contract LendingPoolCollateralManager is
 
     (
         , 
-        , 
-        address token0, 
+        address operator, 
+        ,
         , 
         , 
         , 
@@ -165,7 +165,7 @@ contract LendingPoolCollateralManager is
       collateralReserve,
       debtReserve,
       collateralAsset,
-      token0,
+      operator,
       vars.actualDebtToLiquidate,
       vars.userCollateralBalance
     );
@@ -215,7 +215,7 @@ contract LendingPoolCollateralManager is
     }
 
     debtReserve.updateInterestRates(
-      token0,
+      operator,
       debtReserve.aTokenAddress,
       vars.actualDebtToLiquidate,
       0
@@ -257,7 +257,7 @@ contract LendingPoolCollateralManager is
 
     // Transfers the debt asset being repaid to the aToken, where the liquidity is kept
     
-    IERC721(token0).safeTransferFrom(
+    IERC721(operator).safeTransferFrom(
       msg.sender,
       debtReserve.aTokenAddress,
       vars.actualDebtToLiquidate
@@ -265,7 +265,7 @@ contract LendingPoolCollateralManager is
 
     emit LiquidationCall(
       collateralAsset,
-      token0,
+      operator,
       user,
       vars.actualDebtToLiquidate,
       vars.maxCollateralToLiquidate,
