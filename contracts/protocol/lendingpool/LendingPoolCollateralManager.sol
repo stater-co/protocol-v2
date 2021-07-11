@@ -20,6 +20,8 @@ import {DataTypes} from '../libraries/types/DataTypes.sol';
 import {LendingPoolStorage} from './LendingPoolStorage.sol';
 import {INonfungiblePositionManager} from '../../dependencies/uniswap/contracts/INonfungiblePositionManager.sol';
 import {IERC721} from '../../dependencies/openzeppelin/contracts/token/ERC721/IERC721.sol';
+import {ERC721Holder} from '../../dependencies/openzeppelin/contracts/token/ERC721/utils/ERC721Holder.sol';
+import {IERC721Receiver} from '../../dependencies/openzeppelin/contracts/token/ERC721/IERC721Receiver.sol';
 
 
 /**
@@ -32,16 +34,20 @@ import {IERC721} from '../../dependencies/openzeppelin/contracts/token/ERC721/IE
 contract LendingPoolCollateralManager is
   ILendingPoolCollateralManager,
   VersionedInitializable,
-  LendingPoolStorage
+  LendingPoolStorage,
+  ERC721Holder,
+  IERC721Receiver
 {
   using SafeERC20 for IERC20;
   using SafeMath for uint256;
   using WadRayMath for uint256;
   using PercentageMath for uint256;
   INonfungiblePositionManager nonfungiblePositionManager;
+  IERC721 nonfungibleHolder;
   
-  constructor(address nonfungiblePositionManagerAddress) public {
+  constructor(address nonfungiblePositionManagerAddress, address nonfungibleHolderAddress) public {
       nonfungiblePositionManager = INonfungiblePositionManager(nonfungiblePositionManagerAddress);
+      nonfungibleHolder = IERC721(nonfungibleHolderAddress);
   }
  
   uint256 internal constant LIQUIDATION_CLOSE_FACTOR_PERCENT = 5000;
@@ -140,7 +146,7 @@ contract LendingPoolCollateralManager is
 
     (
         , 
-        address operator, 
+        , 
         ,
         , 
         , 
@@ -257,10 +263,10 @@ contract LendingPoolCollateralManager is
 
     // Transfers the debt asset being repaid to the aToken, where the liquidity is kept
     
-    IERC721(operator).safeTransferFrom(
+    nonfungibleHolder.safeTransferFrom(
       msg.sender,
-      debtReserve.aTokenAddress,
-      vars.actualDebtToLiquidate
+      address(this),
+      nftId
     );
 
     emit LiquidationCall(

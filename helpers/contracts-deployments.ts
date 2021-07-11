@@ -214,6 +214,16 @@ export const deployLendingRateOracle = async (verify?: boolean) =>
     verify
   );
 
+  /*
+export const deployNonfungiblePositionManager = async (verify?: boolean) =>
+  withSaveAndVerify(
+    await new (await getFirstSigner()).deploy(),
+    eContractid.LendingRateOracle,
+    [],
+    verify
+  );
+  */
+
 export const deployMockAggregator = async (price: tStringTokenSmallUnits, verify?: boolean) =>
   withSaveAndVerify(
     await new MockAggregatorFactory(await getFirstSigner()).deploy(price),
@@ -236,7 +246,7 @@ export const deployAaveOracle = async (
 export const deployLendingPoolCollateralManager = async (verify?: boolean) => {
   const collateralManagerImpl = await new LendingPoolCollateralManagerFactory(
     await getFirstSigner()
-  ).deploy();
+  ).deploy(String(await getFirstSigner()));
   await insertContractAddressInDb(
     eContractid.LendingPoolCollateralManagerImpl,
     collateralManagerImpl.address
