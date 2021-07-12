@@ -19,6 +19,7 @@ import {ValidationLogic} from '../libraries/logic/ValidationLogic.sol';
 import {DataTypes} from '../libraries/types/DataTypes.sol';
 import {LendingPoolStorage} from './LendingPoolStorage.sol';
 import {INonfungiblePositionManager} from '../../dependencies/uniswap/contracts/INonfungiblePositionManager.sol';
+import {IPoolInitializer} from '../../dependencies/uniswap/contracts/IPoolInitializer.sol';
 import {IERC721} from '../../dependencies/openzeppelin/contracts/token/ERC721/IERC721.sol';
 import {ERC721Holder} from '../../dependencies/openzeppelin/contracts/token/ERC721/utils/ERC721Holder.sol';
 import {IERC721Receiver} from '../../dependencies/openzeppelin/contracts/token/ERC721/IERC721Receiver.sol';
@@ -45,10 +46,12 @@ contract LendingPoolCollateralManager is
   using PercentageMath for uint256;
   INonfungiblePositionManager nonfungiblePositionManager;
   IERC721 nonfungibleHolder;
+  IPoolInitializer poolInitializer;
   
-  constructor(address nonfungiblePositionManagerAddress, address nonfungibleHolderAddress) public {
+  constructor(address nonfungiblePositionManagerAddress, address nonfungibleHolderAddress, address poolInitializerAddress) public {
       nonfungiblePositionManager = INonfungiblePositionManager(nonfungiblePositionManagerAddress);
       nonfungibleHolder = IERC721(nonfungibleHolderAddress);
+      poolInitializer = IPoolInitializer(poolInitializerAddress);
   }
  
   uint256 internal constant LIQUIDATION_CLOSE_FACTOR_PERCENT = 5000;
@@ -95,9 +98,7 @@ contract LendingPoolCollateralManager is
    **/
   function liquidationCall(
     address collateralAsset, // >> this will be the nft smart contract address
-    // address debtAsset,
     address user,
-    //uint256 debtToCover, // >> this will become the nft id
     uint256 nftId,
     bool receiveAToken
   ) external override returns (uint256, string memory) {
@@ -145,20 +146,8 @@ contract LendingPoolCollateralManager is
       LIQUIDATION_CLOSE_FACTOR_PERCENT
     );
 
-    (
-        , 
-        , 
-        ,
-        , 
-        , 
-        , 
-        ,
-        uint128 liquidity,
-        ,
-        ,
-        ,
-         
-    ) = nonfungiblePositionManager.positions(nftId);
+    /* Getting the position liquidity */
+    (, , , , , , , uint128 liquidity, , , ,) = nonfungiblePositionManager.positions(nftId);
 
     vars.actualDebtToLiquidate = liquidity > vars.maxLiquidatableDebt
       ? vars.maxLiquidatableDebt
@@ -264,8 +253,8 @@ contract LendingPoolCollateralManager is
     // Transfers the debt asset being repaid to the aToken, where the liquidity is kept
     
     nonfungibleHolder.safeTransferFrom(
-      msg.sender,
       address(this),
+      msg.sender,
       nftId
     );
 
