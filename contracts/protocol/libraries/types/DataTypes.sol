@@ -17,7 +17,7 @@ library DataTypes {
     //the current stable borrow rate. Expressed in ray
     uint128 currentStableBorrowRate;
     uint40 lastUpdateTimestamp;
-    //tokens addresses
+    //tokens addresses or address of the collateral nft
     address aTokenAddress;
     address stableDebtTokenAddress;
     address variableDebtTokenAddress;
@@ -25,6 +25,8 @@ library DataTypes {
     address interestRateStrategyAddress;
     //the id of the reserve. Represents the position in the list of the active reserves
     uint8 id;
+    //id of the collateral nft
+    uint256 nftId;
   }
 
   struct ReserveConfigurationMap {

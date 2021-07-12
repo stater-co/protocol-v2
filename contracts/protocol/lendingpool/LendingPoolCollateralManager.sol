@@ -18,7 +18,6 @@ import {Errors} from '../libraries/helpers/Errors.sol';
 import {ValidationLogic} from '../libraries/logic/ValidationLogic.sol';
 import {DataTypes} from '../libraries/types/DataTypes.sol';
 import {LendingPoolStorage} from './LendingPoolStorage.sol';
-import {INonfungiblePositionManager} from '../../dependencies/uniswap/contracts/INonfungiblePositionManager.sol';
 import {IPoolInitializer} from '../../dependencies/uniswap/contracts/IPoolInitializer.sol';
 import {IERC721} from '../../dependencies/openzeppelin/contracts/token/ERC721/IERC721.sol';
 import {ERC721Holder} from '../../dependencies/openzeppelin/contracts/token/ERC721/utils/ERC721Holder.sol';
@@ -44,12 +43,10 @@ contract LendingPoolCollateralManager is
   using SafeMath for uint256;
   using WadRayMath for uint256;
   using PercentageMath for uint256;
-  INonfungiblePositionManager nonfungiblePositionManager;
   IERC721 nonfungibleHolder;
   IPoolInitializer poolInitializer;
   
-  constructor(address nonfungiblePositionManagerAddress, address nonfungibleHolderAddress, address poolInitializerAddress) public {
-      nonfungiblePositionManager = INonfungiblePositionManager(nonfungiblePositionManagerAddress);
+  constructor(address nonfungibleHolderAddress, address poolInitializerAddress) public {
       nonfungibleHolder = IERC721(nonfungibleHolderAddress);
       poolInitializer = IPoolInitializer(poolInitializerAddress);
   }
@@ -90,26 +87,20 @@ contract LendingPoolCollateralManager is
    * - The caller (liquidator) covers `debtToCover` amount of debt of the user getting liquidated, and receives
    *   a proportionally amount of the `collateralAsset` plus a bonus to cover market risk
    * @param collateralAsset The address of the underlying asset used as collateral, to receive as result of the liquidation
-   * debtAsset The address of the underlying borrowed asset to be repaid with the liquidation
+   * @param debtAsset The address of the underlying borrowed asset to be repaid with the liquidation
    * @param user The address of the borrower getting liquidated
-   * debtToCover The debt amount of borrowed `asset` the liquidator wants to cover
-   * @param receiveAToken `true` if the liquidators wants to receive the collateral aTokens, `false` if he wants
+   * @param debtToCover The debt amount of borrowed `asset` the liquidator wants to cover
    * to receive the underlying collateral asset directly
    **/
   function liquidationCall(
-    address collateralAsset, // >> this will be the nft smart contract address
+    address collateralAsset,
+    address debtAsset,
     address user,
-    uint256 nftId,
-    bool receiveAToken
+    uint256 debtToCover,
+    uint256 nftId
   ) external override returns (uint256, string memory) {
-
-    /* Could be replaced with the address of the uniswap v3 nft smart contract, no problem here */
     DataTypes.ReserveData storage collateralReserve = _reserves[collateralAsset];
-
-    /* DataTypes.ReserveData storage debtReserve = _reserves[debtAsset]; */
-    DataTypes.ReserveData storage debtReserve = _reserves[collateralAsset];
-    
-    /* Doesn't need changes */
+    DataTypes.ReserveData storage debtReserve = _reserves[debtAsset];
     DataTypes.UserConfigurationMap storage userConfig = _usersConfig[user];
 
     LiquidationCallLocalVars memory vars;
@@ -146,12 +137,9 @@ contract LendingPoolCollateralManager is
       LIQUIDATION_CLOSE_FACTOR_PERCENT
     );
 
-    /* Getting the position liquidity */
-    (, , , , , , , uint128 liquidity, , , ,) = nonfungiblePositionManager.positions(nftId);
-
-    vars.actualDebtToLiquidate = liquidity > vars.maxLiquidatableDebt
+    vars.actualDebtToLiquidate = debtToCover > vars.maxLiquidatableDebt
       ? vars.maxLiquidatableDebt
-      : liquidity;
+      : debtToCover;
 
     // We'll see how to handle both addresses
     (
@@ -161,8 +149,9 @@ contract LendingPoolCollateralManager is
       collateralReserve,
       debtReserve,
       collateralAsset,
-      liquidity,
-      vars.actualDebtToLiquidate
+      debtAsset,
+      vars.actualDebtToLiquidate,
+      vars.userCollateralBalance
     );
 
     // If debtAmountNeeded < actualDebtToLiquidate, there isn't enough
@@ -171,19 +160,6 @@ contract LendingPoolCollateralManager is
 
     if (vars.debtAmountNeeded < vars.actualDebtToLiquidate) {
       vars.actualDebtToLiquidate = vars.debtAmountNeeded;
-    }
-
-    // If the liquidator reclaims the underlying asset, we make sure there is enough available liquidity in the
-    // collateral reserve
-    if (!receiveAToken) {
-      uint256 currentAvailableCollateral =
-        IERC20(collateralAsset).balanceOf(address(vars.collateralAtoken));
-      if (currentAvailableCollateral < vars.maxCollateralToLiquidate) {
-        return (
-          uint256(Errors.CollateralManagerErrors.NOT_ENOUGH_LIQUIDITY),
-          Errors.LPCM_NOT_ENOUGH_LIQUIDITY_TO_LIQUIDATE
-        );
-      }
     }
 
     debtReserve.updateState();
@@ -210,38 +186,12 @@ contract LendingPoolCollateralManager is
     }
 
     debtReserve.updateInterestRates(
-      address(nonfungibleHolder),
+      debtAsset,
       debtReserve.aTokenAddress,
       vars.actualDebtToLiquidate,
       0
     );
-
-    if (receiveAToken) {
-      vars.liquidatorPreviousATokenBalance = IERC20(vars.collateralAtoken).balanceOf(msg.sender);
-      vars.collateralAtoken.transferOnLiquidation(user, msg.sender, vars.maxCollateralToLiquidate);
-
-      if (vars.liquidatorPreviousATokenBalance == 0) {
-        DataTypes.UserConfigurationMap storage liquidatorConfig = _usersConfig[msg.sender];
-        liquidatorConfig.setUsingAsCollateral(collateralReserve.id, true);
-        emit ReserveUsedAsCollateralEnabled(collateralAsset, msg.sender);
-      }
-    } else {
-      collateralReserve.updateState();
-      collateralReserve.updateInterestRates(
-        collateralAsset,
-        address(vars.collateralAtoken),
-        0,
-        vars.maxCollateralToLiquidate
-      );
-
-      // Burn the equivalent amount of aToken, sending the underlying to the liquidator
-      vars.collateralAtoken.burn(
-        user,
-        msg.sender,
-        vars.maxCollateralToLiquidate,
-        collateralReserve.liquidityIndex
-      );
-    }
+    
 
     // If the collateral being liquidated is equal to the user balance,
     // we set the currency as not being used as collateral anymore
@@ -251,21 +201,27 @@ contract LendingPoolCollateralManager is
     }
 
     // Transfers the debt asset being repaid to the aToken, where the liquidity is kept
+    IERC20(debtAsset).safeTransferFrom(
+      msg.sender,
+      debtReserve.aTokenAddress,
+      vars.actualDebtToLiquidate
+    );
+    
     
     nonfungibleHolder.safeTransferFrom(
       address(this),
       msg.sender,
       nftId
     );
+    
 
     emit LiquidationCall(
       collateralAsset,
-      address(nonfungibleHolder),
+      debtAsset,
       user,
       vars.actualDebtToLiquidate,
       vars.maxCollateralToLiquidate,
-      msg.sender,
-      receiveAToken
+      msg.sender
     );
 
     return (uint256(Errors.CollateralManagerErrors.NO_ERROR), Errors.LPCM_NO_ERRORS);
@@ -289,9 +245,9 @@ contract LendingPoolCollateralManager is
    * @param collateralReserve The data of the collateral reserve
    * @param debtReserve The data of the debt reserve
    * @param collateralAsset The address of the underlying asset used as collateral, to receive as result of the liquidation
-   * debtAsset The address of the underlying borrowed asset to be repaid with the liquidation
+   * @param debtAsset The address of the underlying borrowed asset to be repaid with the liquidation
    * @param debtToCover The debt amount of borrowed `asset` the liquidator wants to cover
-   * userCollateralBalance The collateral balance for the specific `collateralAsset` of the user being liquidated
+   * @param userCollateralBalance The collateral balance for the specific `collateralAsset` of the user being liquidated
    * @return collateralAmount: The maximum amount that is possible to liquidate given all the liquidation constraints
    *                           (user balance, close factor)
    *         debtAmountNeeded: The amount to repay with the liquidation
@@ -300,8 +256,9 @@ contract LendingPoolCollateralManager is
     DataTypes.ReserveData storage collateralReserve,
     DataTypes.ReserveData storage debtReserve,
     address collateralAsset,
-    uint256 nftPrice,
-    uint256 debtToCover
+    address debtAsset,
+    uint256 debtToCover,
+    uint256 userCollateralBalance
   ) internal view returns (uint256, uint256) {
     uint256 collateralAmount = 0;
     uint256 debtAmountNeeded = 0;
@@ -310,7 +267,7 @@ contract LendingPoolCollateralManager is
     AvailableCollateralToLiquidateLocalVars memory vars;
 
     vars.collateralPrice = oracle.getAssetPrice(collateralAsset);
-    vars.debtAssetPrice = nftPrice;
+    vars.debtAssetPrice = oracle.getAssetPrice(debtAsset);
 
     (, , vars.liquidationBonus, vars.collateralDecimals, ) = collateralReserve
       .configuration
@@ -326,8 +283,8 @@ contract LendingPoolCollateralManager is
       .percentMul(vars.liquidationBonus)
       .div(vars.collateralPrice.mul(10**vars.debtAssetDecimals));
 
-    if (vars.maxAmountCollateralToLiquidate > nftPrice) {
-      collateralAmount = nftPrice;
+    if (vars.maxAmountCollateralToLiquidate > userCollateralBalance) {
+      collateralAmount = userCollateralBalance;
       debtAmountNeeded = vars
         .collateralPrice
         .mul(collateralAmount)
