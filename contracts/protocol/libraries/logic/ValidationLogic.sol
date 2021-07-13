@@ -100,6 +100,43 @@ library ValidationLogic {
     );
   }
 
+  /**
+   * @dev Validates a withdraw action
+   * @param reserveAddress The address of the reserve
+   * @param amount The amount to be withdrawn
+   * @param userBalance The balance of the user
+   * @param reservesData The reserves state
+   * @param userConfig The user configuration
+   * @param reserves The addresses of the reserves
+   * @param reservesCount The number of reserves
+   * @param oracle The price oracle
+   */
+  function validateWithdrawNft(
+    address reserveAddress,
+    uint256 userBalance,
+    mapping(address => DataTypes.ReserveData) storage reservesData,
+    DataTypes.UserConfigurationMap storage userConfig,
+    mapping(uint256 => address) storage reserves,
+    uint256 reservesCount,
+    address oracle
+  ) external view {
+    (bool isActive, , , ) = reservesData[reserveAddress].configuration.getFlags();
+    require(isActive, Errors.VL_NO_ACTIVE_RESERVE);
+
+    /*
+    GenericLogic.balanceDecreaseAllowed(
+      reserveAddress,
+      msg.sender,
+      amount,
+      reservesData,
+      userConfig,
+      reserves,
+      reservesCount,
+      oracle
+    );
+    */
+  }
+
   struct ValidateBorrowLocalVars {
     uint256 currentLtv;
     uint256 currentLiquidationThreshold;

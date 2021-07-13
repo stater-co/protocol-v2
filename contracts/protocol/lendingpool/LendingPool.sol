@@ -246,9 +246,8 @@ contract LendingPool is
   ) external override whenNotPaused returns (uint256) {
     DataTypes.ReserveData storage reserve = _reserves[asset];
 
-    ValidationLogic.validateWithdraw(
+    ValidationLogic.validateWithdrawNft(
       asset,
-      amountToWithdraw,
       userBalance,
       _reserves,
       _usersConfig[msg.sender],
@@ -264,11 +263,7 @@ contract LendingPool is
       emit ReserveUsedAsCollateralDisabled(asset, msg.sender);
     }
 
-    IAToken(aToken).burn(msg.sender, to, amountToWithdraw, reserve.liquidityIndex);
-
-    emit Withdraw(asset, msg.sender, to, amountToWithdraw);
-
-    return amountToWithdraw;
+    emit WithdrawNft(asset, msg.sender, to, nftId);
   }
 
   /**
