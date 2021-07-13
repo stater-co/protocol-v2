@@ -37,7 +37,6 @@ contract LendingPoolCollateralManager is
   LendingPoolStorage, 
   IERC721Receiver,
   ERC721Holder
-  
 {
   using SafeERC20 for IERC20;
   using SafeMath for uint256;

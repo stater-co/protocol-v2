@@ -41,7 +41,6 @@ library ValidationLogic {
   function validateDeposit(DataTypes.ReserveData storage reserve, uint256 amount) external view {
     (bool isActive, bool isFrozen, , ) = reserve.configuration.getFlags();
 
-    require(amount != 0, Errors.VL_INVALID_AMOUNT);
     require(isActive, Errors.VL_NO_ACTIVE_RESERVE);
     require(!isFrozen, Errors.VL_RESERVE_FROZEN);
   }

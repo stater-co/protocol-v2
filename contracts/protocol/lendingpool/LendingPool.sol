@@ -25,6 +25,9 @@ import {ReserveConfiguration} from '../libraries/configuration/ReserveConfigurat
 import {UserConfiguration} from '../libraries/configuration/UserConfiguration.sol';
 import {DataTypes} from '../libraries/types/DataTypes.sol';
 import {LendingPoolStorage} from './LendingPoolStorage.sol';
+import {IERC721} from '../../dependencies/openzeppelin/contracts/token/ERC721/IERC721.sol';
+import {ERC721Holder} from '../../dependencies/openzeppelin/contracts/token/ERC721/utils/ERC721Holder.sol';
+import {IERC721Receiver} from '../../dependencies/openzeppelin/contracts/token/ERC721/IERC721Receiver.sol';
 
 /**
  * @title LendingPool contract
@@ -43,7 +46,13 @@ import {LendingPoolStorage} from './LendingPoolStorage.sol';
  *   LendingPoolAddressesProvider
  * @author Aave
  **/
-contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage {
+contract LendingPool is 
+  VersionedInitializable, 
+  ILendingPool, 
+  LendingPoolStorage,
+  IERC721Receiver,
+  ERC721Holder 
+{
   using SafeMath for uint256;
   using WadRayMath for uint256;
   using PercentageMath for uint256;
@@ -102,21 +111,30 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
    *   0 if the action is executed directly by the user, without any middle-man
    **/
   function deposit(
-    address asset,
-    uint256 amount,
-    address onBehalfOf,
-    uint16 referralCode
+    address asset, // the address of the currency asset or the address of the nft
+    uint256 amount, // 0 when nft is deposited
+    address onBehalfOf, // the user address, no meanings changed
+    uint16 referralCode, // referral code
+    uint256 nftId // the nft id, used only when amount is 0
   ) external override whenNotPaused {
     DataTypes.ReserveData storage reserve = _reserves[asset];
 
     ValidationLogic.validateDeposit(reserve, amount);
 
     address aToken = reserve.aTokenAddress;
-
     reserve.updateState();
-    reserve.updateInterestRates(asset, aToken, amount, 0);
 
-    IERC20(asset).safeTransferFrom(msg.sender, aToken, amount);
+    if (amount == 0) {
+
+      reserve.updateInterestRates(asset, aToken, 0, 0);
+      IERC721(asset).safeTransferFrom(msg.sender, address(this), nftId);
+
+    } else {
+
+      reserve.updateInterestRates(asset, aToken, amount, 0);
+      IERC20(asset).safeTransferFrom(msg.sender, aToken, amount);
+
+    }
 
     bool isFirstDeposit = IAToken(aToken).mint(onBehalfOf, amount, reserve.liquidityIndex);
 
