@@ -279,7 +279,11 @@ abstract contract BaseUniswapAdapter is FlashLoanReceiverBase, IBaseUniswapAdapt
     uint256 amount,
     PermitSignature memory permitSignature
   ) internal {
+
+    /*
     if (_usePermit(permitSignature)) {
+
+      // @DIIMIIM: No longer needed, to be replaced with nft transfer
       IERC20WithPermit(reserveAToken).permit(
         user,
         address(this),
@@ -289,10 +293,13 @@ abstract contract BaseUniswapAdapter is FlashLoanReceiverBase, IBaseUniswapAdapt
         permitSignature.r,
         permitSignature.s
       );
+
     }
+    */
 
     // transfer from user to adapter
-    IERC20(reserveAToken).safeTransferFrom(user, address(this), amount);
+    // @DIIMIIM: No longer needed, to be replaced with nft transfer
+    //IERC20(reserveAToken).safeTransferFrom(user, address(this), amount);
 
     // withdraw reserve
     LENDING_POOL.withdraw(reserve, amount, address(this));
@@ -304,10 +311,14 @@ abstract contract BaseUniswapAdapter is FlashLoanReceiverBase, IBaseUniswapAdapt
    * @param signature struct containing the permit signature
    * @return whether or not permit should be called
    */
+
+   /*
+    * @DIIMIIM: No longer needed ( only 1 use case situation )
   function _usePermit(PermitSignature memory signature) internal pure returns (bool) {
     return
       !(uint256(signature.deadline) == uint256(signature.v) && uint256(signature.deadline) == 0);
   }
+  */
 
   /**
    * @dev Calculates the value denominated in USD
