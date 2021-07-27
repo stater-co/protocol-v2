@@ -118,6 +118,7 @@ contract UniswapLiquiditySwapAdapter is BaseUniswapAdapter {
   /* address aToken; from before will be globally set ( only 1 type of stater nft... or may be many ) */
   struct SwapAndDepositLocalVars {
     uint256 i;
+    uint256 aTokenInitiatorBalance;
     uint256 tokenId;
     uint256 amountToSwap;
     uint256 receivedAmount;
@@ -160,19 +161,21 @@ contract UniswapLiquiditySwapAdapter is BaseUniswapAdapter {
     SwapAndDepositLocalVars memory vars;
 
     for (vars.i = 0; vars.i < assetToSwapFromList.length; vars.i++) {
-      vars.aToken = _getReserveData(assetToSwapFromList[vars.i]).aTokenAddress;
+      //@DIIMIIM: vars.aToken = _getReserveData(assetToSwapFromList[vars.i]).aTokenAddress;
 
       vars.aTokenInitiatorBalance = IERC20(vars.aToken).balanceOf(msg.sender);
+
       vars.amountToSwap = amountToSwapList[vars.i] > vars.aTokenInitiatorBalance
         ? vars.aTokenInitiatorBalance
         : amountToSwapList[vars.i];
 
+      // @DIIMIIM: This will interact with stater nft
       _pullAToken(
         assetToSwapFromList[vars.i],
-        vars.aToken,
+        //vars.aToken,
         msg.sender,
-        vars.amountToSwap,
-        permitParams[vars.i]
+        vars.amountToSwap //,
+        //permitParams[vars.i]
       );
 
       vars.receivedAmount = _swapExactTokensForTokens(

@@ -277,11 +277,11 @@ abstract contract BaseUniswapAdapter is FlashLoanReceiverBase, IBaseUniswapAdapt
    * @DIIMIIM: Judging by the function description this will withdraw the nft from the user's account
    */
   function _pullAToken(
-    address reserve,
-    address reserveAToken,
+    address reserve, // address of the aToken asset
+    // address reserveAToken // @DIIMIIM: the aToken address, will be no longer used,
     address user,
-    uint256 amount,
-    PermitSignature memory permitSignature
+    uint256 amount //,
+    // PermitSignature memory permitSignature // @DIIMIIM: Without aToken system this will become obsolete
   ) internal {
 
     /*
@@ -307,7 +307,7 @@ abstract contract BaseUniswapAdapter is FlashLoanReceiverBase, IBaseUniswapAdapt
 
     // withdraw reserve
     // LENDING_POOL.withdraw(reserve, amount, address(this));
-    
+
   }
 
   /**
