@@ -101,6 +101,7 @@ contract UniswapLiquiditySwapAdapter is BaseUniswapAdapter {
     return true;
   }
 
+
   /* @DIIMIIM: Before */
   /*
   struct SwapAndDepositLocalVars {
@@ -111,6 +112,7 @@ contract UniswapLiquiditySwapAdapter is BaseUniswapAdapter {
     address aToken;
   }
   */
+
 
   /* @DIIMIIM: After */
   /* address aToken; from before will be globally set ( only 1 type of stater nft... or may be many ) */
