@@ -206,7 +206,8 @@ contract UniswapLiquiditySwapAdapter is BaseUniswapAdapter {
    */
 
   struct SwapLiquidityLocalVars {
-    address aToken;
+    // address aToken; @DIIMIIM: this is no longer used, replaced by tokenId + global nft address
+    uint256 tokenId;
     uint256 aTokenInitiatorBalance;
     uint256 amountToSwap;
     uint256 receivedAmount;
@@ -215,14 +216,14 @@ contract UniswapLiquiditySwapAdapter is BaseUniswapAdapter {
   }
 
   function _swapLiquidity(
-    address assetFrom,
+    // address assetFrom, @DIIMIIM: no longer used, nft address will be used instead
     address assetTo,
     uint256 amount,
     uint256 premium,
     address initiator,
     uint256 minAmountToReceive,
     bool swapAllBalance,
-    PermitSignature memory permitSignature,
+    //PermitSignature memory permitSignature,
     bool useEthPath
   ) internal {
     SwapLiquidityLocalVars memory vars;
@@ -250,7 +251,13 @@ contract UniswapLiquiditySwapAdapter is BaseUniswapAdapter {
     vars.flashLoanDebt = amount.add(premium);
     vars.amountToPull = vars.amountToSwap.add(premium);
 
-    _pullAToken(assetFrom, vars.aToken, initiator, vars.amountToPull, permitSignature);
+    _pullAToken(
+      assetFrom, 
+      //vars.aToken, 
+      initiator, 
+      vars.amountToPull//, 
+      //permitSignature
+    );
 
     // Repay flash loan
     IERC20(assetFrom).safeApprove(address(LENDING_POOL), 0);

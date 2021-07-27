@@ -67,7 +67,7 @@ contract UniswapRepayAdapter is BaseUniswapAdapter {
       decodedParams.rateMode,
       initiator,
       premiums[0],
-      decodedParams.permitSignature,
+      //decodedParams.permitSignature, // @DIIMIIM: No longer used, will be replaced for nft logics
       decodedParams.useEthPath
     );
 
@@ -93,8 +93,8 @@ contract UniswapRepayAdapter is BaseUniswapAdapter {
     address debtAsset,
     uint256 collateralAmount,
     uint256 debtRepayAmount,
-    uint256 debtRateMode,
-    PermitSignature calldata permitSignature,
+    uint256 debtRateMode//,
+    //PermitSignature calldata permitSignature,
     bool useEthPath
   ) external {
     DataTypes.ReserveData memory collateralReserveData = _getReserveData(collateralAsset);
@@ -122,10 +122,10 @@ contract UniswapRepayAdapter is BaseUniswapAdapter {
       // Pull aTokens from user
       _pullAToken(
         collateralAsset,
-        collateralReserveData.aTokenAddress,
+        //collateralReserveData.aTokenAddress,
         msg.sender,
-        amounts[0],
-        permitSignature
+        amounts[0]//,
+        //permitSignature
       );
 
       // Swap collateral for debt asset
@@ -134,10 +134,10 @@ contract UniswapRepayAdapter is BaseUniswapAdapter {
       // Pull aTokens from user
       _pullAToken(
         collateralAsset,
-        collateralReserveData.aTokenAddress,
+        //collateralReserveData.aTokenAddress,
         msg.sender,
-        amountToRepay,
-        permitSignature
+        amountToRepay//,
+        //permitSignature
       );
     }
 
@@ -167,10 +167,10 @@ contract UniswapRepayAdapter is BaseUniswapAdapter {
     uint256 rateMode,
     address initiator,
     uint256 premium,
-    PermitSignature memory permitSignature,
+    //PermitSignature memory permitSignature, // @DIIMIIM: No longer used, will be replaced with nft
     bool useEthPath
   ) internal {
-    DataTypes.ReserveData memory collateralReserveData = _getReserveData(collateralAsset);
+    //DataTypes.ReserveData memory collateralReserveData = _getReserveData(collateralAsset);
 
     // Repay debt. Approves for 0 first to comply with tokens that implement the anti frontrunning approval fix.
     IERC20(debtAsset).safeApprove(address(LENDING_POOL), 0);
@@ -193,10 +193,10 @@ contract UniswapRepayAdapter is BaseUniswapAdapter {
       // Pull aTokens from user
       _pullAToken(
         collateralAsset,
-        collateralReserveData.aTokenAddress,
+        //collateralReserveData.aTokenAddress,
         initiator,
         amounts[0],
-        permitSignature
+        //permitSignature
       );
 
       // Swap collateral asset to the debt asset
@@ -211,10 +211,10 @@ contract UniswapRepayAdapter is BaseUniswapAdapter {
       // Pull aTokens from user
       _pullAToken(
         collateralAsset,
-        collateralReserveData.aTokenAddress,
+        //collateralReserveData.aTokenAddress,
         initiator,
         repaidAmount.add(premium),
-        permitSignature
+        //permitSignature
       );
     }
 
