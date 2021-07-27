@@ -47,18 +47,6 @@ library ValidationLogic {
   }
 
   /**
-   * @dev Validates a deposit action
-   * @param reserve The reserve object on which the user is depositing
-   * @param amount The amount to be deposited
-   */
-  function validateDepositNft(DataTypes.ReserveData storage reserve) external view {
-    (bool isActive, bool isFrozen, , ) = reserve.configuration.getFlags();
-
-    require(isActive, Errors.VL_NO_ACTIVE_RESERVE);
-    require(!isFrozen, Errors.VL_RESERVE_FROZEN);
-  }
-
-  /**
    * @dev Validates a withdraw action
    * @param reserveAddress The address of the reserve
    * @param amount The amount to be withdrawn
@@ -98,43 +86,6 @@ library ValidationLogic {
       ),
       Errors.VL_TRANSFER_NOT_ALLOWED
     );
-  }
-
-  /**
-   * @dev Validates a withdraw action
-   * @param reserveAddress The address of the reserve
-   * @param amount The amount to be withdrawn
-   * @param userBalance The balance of the user
-   * @param reservesData The reserves state
-   * @param userConfig The user configuration
-   * @param reserves The addresses of the reserves
-   * @param reservesCount The number of reserves
-   * @param oracle The price oracle
-   */
-  function validateWithdrawNft(
-    address reserveAddress,
-    uint256 userBalance,
-    mapping(address => DataTypes.ReserveData) storage reservesData,
-    DataTypes.UserConfigurationMap storage userConfig,
-    mapping(uint256 => address) storage reserves,
-    uint256 reservesCount,
-    address oracle
-  ) external view {
-    (bool isActive, , , ) = reservesData[reserveAddress].configuration.getFlags();
-    require(isActive, Errors.VL_NO_ACTIVE_RESERVE);
-
-    /*
-    GenericLogic.balanceDecreaseAllowed(
-      reserveAddress,
-      msg.sender,
-      amount,
-      reservesData,
-      userConfig,
-      reserves,
-      reservesCount,
-      oracle
-    );
-    */
   }
 
   struct ValidateBorrowLocalVars {
