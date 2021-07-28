@@ -6,6 +6,9 @@ import {IScaledBalanceToken} from './IScaledBalanceToken.sol';
 import {IInitializableAToken} from './IInitializableAToken.sol';
 import {IAaveIncentivesController} from './IAaveIncentivesController.sol';
 
+/*
+ * @DIIMIIM: This will be replaced with our NFT
+ */
 interface IAToken is IERC20, IScaledBalanceToken, IInitializableAToken {
   /**
    * @dev Emitted after the mint action
