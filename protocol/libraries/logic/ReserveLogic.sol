@@ -163,16 +163,16 @@ library ReserveLogic {
    **/
   function init(
     DataTypes.ReserveData storage reserve,
-    address aTokenAddress,
     address stableDebtTokenAddress,
     address variableDebtTokenAddress,
     address interestRateStrategyAddress
   ) external {
-    require(reserve.aTokenAddress == address(0), Errors.RL_RESERVE_ALREADY_INITIALIZED);
+
+    // @DIIMIIM: this is commented out now, possible to be changed in the future
+    //require(reserve.aTokenAddress == address(0), Errors.RL_RESERVE_ALREADY_INITIALIZED);
 
     reserve.liquidityIndex = uint128(WadRayMath.ray());
     reserve.variableBorrowIndex = uint128(WadRayMath.ray());
-    reserve.aTokenAddress = aTokenAddress;
     reserve.stableDebtTokenAddress = stableDebtTokenAddress;
     reserve.variableDebtTokenAddress = variableDebtTokenAddress;
     reserve.interestRateStrategyAddress = interestRateStrategyAddress;
@@ -198,7 +198,7 @@ library ReserveLogic {
   function updateInterestRates(
     DataTypes.ReserveData storage reserve,
     address reserveAddress,
-    address aTokenAddress,
+    //address aTokenAddress,
     uint256 liquidityAdded,
     uint256 liquidityTaken
   ) internal {
@@ -222,7 +222,7 @@ library ReserveLogic {
       vars.newVariableRate
     ) = IReserveInterestRateStrategy(reserve.interestRateStrategyAddress).calculateInterestRates(
       reserveAddress,
-      aTokenAddress,
+      //aTokenAddress,
       liquidityAdded,
       liquidityTaken,
       vars.totalStableDebt,
@@ -320,7 +320,7 @@ library ReserveLogic {
     vars.amountToMint = vars.totalDebtAccrued.percentMul(vars.reserveFactor);
 
     if (vars.amountToMint != 0) {
-      IAToken(reserve.aTokenAddress).mintToTreasury(vars.amountToMint, newLiquidityIndex);
+      // @DIIMIIM: nft mint //IAToken(reserve.aTokenAddress).mintToTreasury(vars.amountToMint, newLiquidityIndex);
     }
   }
 

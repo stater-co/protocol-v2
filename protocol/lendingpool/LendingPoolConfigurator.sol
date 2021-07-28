@@ -452,7 +452,7 @@ contract LendingPoolConfigurator is VersionedInitializable, ILendingPoolConfigur
   function _checkNoLiquidity(address asset) internal view {
     DataTypes.ReserveData memory reserveData = pool.getReserveData(asset);
 
-    uint256 availableLiquidity = IERC20Detailed(asset).balanceOf(reserveData.aTokenAddress);
+    uint256 availableLiquidity = IERC20Detailed(asset).balanceOf(address(0) /* @DIIMIIM: nft address here reserveData.aTokenAddress */);
 
     require(
       availableLiquidity == 0 && reserveData.currentLiquidityRate == 0,
