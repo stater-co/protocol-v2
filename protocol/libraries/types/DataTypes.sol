@@ -4,6 +4,8 @@ pragma solidity 0.6.12;
 library DataTypes {
   // refer to the whitepaper, section 1.1 basic concepts for a formal description of these properties.
   struct ReserveData {
+    //the token id
+    uint256 tokenId;
     //stores the reserve configuration
     ReserveConfigurationMap configuration;
     //the liquidity index. Expressed in ray

@@ -142,8 +142,8 @@ interface ILendingPool {
     address indexed user,
     uint256 debtToCover,
     uint256 liquidatedCollateralAmount,
-    address liquidator,
-    bool receiveAToken
+    address liquidator //,
+    //bool receiveAToken
   );
 
   /**
@@ -284,8 +284,8 @@ interface ILendingPool {
     address collateralAsset,
     address debtAsset,
     address user,
-    uint256 debtToCover,
-    bool receiveAToken
+    uint256 debtToCover //,
+    //bool receiveAToken
   ) external;
 
   /**
@@ -339,7 +339,7 @@ interface ILendingPool {
 
   function initReserve(
     address reserve,
-    address aTokenAddress,
+    //address aTokenAddress,
     address stableDebtAddress,
     address variableDebtAddress,
     address interestRateStrategyAddress

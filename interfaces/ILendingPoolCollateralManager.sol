@@ -23,8 +23,8 @@ interface ILendingPoolCollateralManager {
     address indexed user,
     uint256 debtToCover,
     uint256 liquidatedCollateralAmount,
-    address liquidator,
-    bool receiveAToken
+    address liquidator //,
+    //bool receiveAToken
   );
 
   /**
@@ -54,7 +54,7 @@ interface ILendingPoolCollateralManager {
     address collateral,
     address principal,
     address user,
-    uint256 debtToCover,
-    bool receiveAToken
+    uint256 debtToCover //,
+    //bool receiveAToken
   ) external returns (uint256, string memory);
 }

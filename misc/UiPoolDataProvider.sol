@@ -8,7 +8,8 @@ import {IAaveIncentivesController} from '../interfaces/IAaveIncentivesController
 import {IUiPoolDataProvider} from './interfaces/IUiPoolDataProvider.sol';
 import {ILendingPool} from '../interfaces/ILendingPool.sol';
 import {IPriceOracleGetter} from '../interfaces/IPriceOracleGetter.sol';
-import {IAToken} from '../interfaces/IAToken.sol';
+// @DIIMIIM: this is no longer used, will be replaced with nft
+//import {IAToken} from '../interfaces/IAToken.sol';
 import {IVariableDebtToken} from '../interfaces/IVariableDebtToken.sol';
 import {IStableDebtToken} from '../interfaces/IStableDebtToken.sol';
 import {WadRayMath} from '../protocol/libraries/math/WadRayMath.sol';
@@ -83,15 +84,15 @@ contract UiPoolDataProvider is IUiPoolDataProvider {
       reserveData.variableBorrowRate = baseData.currentVariableBorrowRate;
       reserveData.stableBorrowRate = baseData.currentStableBorrowRate;
       reserveData.lastUpdateTimestamp = baseData.lastUpdateTimestamp;
-      reserveData.aTokenAddress = baseData.aTokenAddress;
+      reserveData.tokenId = baseData.tokenId;
       reserveData.stableDebtTokenAddress = baseData.stableDebtTokenAddress;
       reserveData.variableDebtTokenAddress = baseData.variableDebtTokenAddress;
       reserveData.interestRateStrategyAddress = baseData.interestRateStrategyAddress;
       reserveData.priceInEth = oracle.getAssetPrice(reserveData.underlyingAsset);
 
-      reserveData.availableLiquidity = IERC20Detailed(reserveData.underlyingAsset).balanceOf(
-        reserveData.aTokenAddress
-      );
+      reserveData.availableLiquidity = uint256(0); //IERC20Detailed(reserveData.underlyingAsset).balanceOf(reserveData.aTokenAddress); // @DIIMIIM: Get nft liquidity here
+
+
       (
         reserveData.totalPrincipalStableDebt,
         ,
@@ -104,8 +105,9 @@ contract UiPoolDataProvider is IUiPoolDataProvider {
       // reserve configuration
 
       // we're getting this info from the aToken, because some of assets can be not compliant with ETC20Detailed
-      reserveData.symbol = IERC20Detailed(reserveData.aTokenAddress).symbol();
-      reserveData.name = '';
+      // @DIIMIIM: This will be no longer required as we identify the nfts by their token ids
+      // reserveData.symbol = IERC20Detailed(reserveData.aTokenAddress).symbol();
+      // reserveData.name = '';
 
       (
         reserveData.baseLTVasCollateral,

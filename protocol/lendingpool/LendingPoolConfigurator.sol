@@ -15,7 +15,7 @@ import {Errors} from '../libraries/helpers/Errors.sol';
 import {PercentageMath} from '../libraries/math/PercentageMath.sol';
 import {DataTypes} from '../libraries/types/DataTypes.sol';
 import {IInitializableDebtToken} from '../../interfaces/IInitializableDebtToken.sol';
-import {IInitializableAToken} from '../../interfaces/IInitializableAToken.sol';
+//import {IInitializableAToken} from '../../interfaces/IInitializableAToken.sol'; // @DIIMIIM: Removed, will be replaced with stater nft logic
 import {IAaveIncentivesController} from '../../interfaces/IAaveIncentivesController.sol';
 import {ILendingPoolConfigurator} from '../../interfaces/ILendingPoolConfigurator.sol';
 
@@ -68,6 +68,9 @@ contract LendingPoolConfigurator is VersionedInitializable, ILendingPoolConfigur
   }
 
   function _initReserve(ILendingPool pool, InitReserveInput calldata input) internal {
+
+    // This will no longer be required as the stater nft will be used
+    /*
     address aTokenProxyAddress =
       _initTokenWithProxy(
         input.aTokenImpl,
@@ -83,6 +86,7 @@ contract LendingPoolConfigurator is VersionedInitializable, ILendingPoolConfigur
           input.params
         )
       );
+    */
 
     address stableDebtTokenProxyAddress =
       _initTokenWithProxy(
@@ -116,7 +120,7 @@ contract LendingPoolConfigurator is VersionedInitializable, ILendingPoolConfigur
 
     pool.initReserve(
       input.underlyingAsset,
-      aTokenProxyAddress,
+      //aTokenProxyAddress,
       stableDebtTokenProxyAddress,
       variableDebtTokenProxyAddress,
       input.interestRateStrategyAddress
@@ -134,43 +138,14 @@ contract LendingPoolConfigurator is VersionedInitializable, ILendingPoolConfigur
 
     emit ReserveInitialized(
       input.underlyingAsset,
-      aTokenProxyAddress,
+      //aTokenProxyAddress,
+      
       stableDebtTokenProxyAddress,
       variableDebtTokenProxyAddress,
       input.interestRateStrategyAddress
     );
   }
 
-  /**
-   * @dev Updates the aToken implementation for the reserve
-   **/
-  function updateAToken(UpdateATokenInput calldata input) external onlyPoolAdmin {
-    ILendingPool cachedPool = pool;
-
-    DataTypes.ReserveData memory reserveData = cachedPool.getReserveData(input.asset);
-
-    (, , , uint256 decimals, ) = cachedPool.getConfiguration(input.asset).getParamsMemory();
-
-    bytes memory encodedCall = abi.encodeWithSelector(
-        IInitializableAToken.initialize.selector,
-        cachedPool,
-        input.treasury,
-        input.asset,
-        input.incentivesController,
-        decimals,
-        input.name,
-        input.symbol,
-        input.params
-      );
-
-    _upgradeTokenImplementation(
-      reserveData.aTokenAddress,
-      input.implementation,
-      encodedCall
-    );
-
-    emit ATokenUpgraded(input.asset, reserveData.aTokenAddress, input.implementation);
-  }
 
   /**
    * @dev Updates the stable debt token implementation for the reserve

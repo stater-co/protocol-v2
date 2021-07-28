@@ -110,7 +110,7 @@ contract DefaultReserveInterestRateStrategy is IReserveInterestRateStrategy {
    **/
   function calculateInterestRates(
     address reserve,
-    address aToken,
+    //address aToken,
     uint256 liquidityAdded,
     uint256 liquidityTaken,
     uint256 totalStableDebt,
@@ -127,7 +127,7 @@ contract DefaultReserveInterestRateStrategy is IReserveInterestRateStrategy {
       uint256
     )
   {
-    uint256 availableLiquidity = IERC20(reserve).balanceOf(aToken);
+    uint256 availableLiquidity = uint256(0); // @DIIMIIM: Get nft liquidity //IERC20(reserve).balanceOf(aToken);
     //avoid stack too deep
     availableLiquidity = availableLiquidity.add(liquidityAdded).sub(liquidityTaken);
 

@@ -4,7 +4,7 @@ pragma experimental ABIEncoderV2;
 
 interface ILendingPoolConfigurator {
   struct InitReserveInput {
-    address aTokenImpl;
+    // address aTokenImpl;
     address stableDebtTokenImpl;
     address variableDebtTokenImpl;
     uint8 underlyingAssetDecimals;
@@ -13,22 +13,12 @@ interface ILendingPoolConfigurator {
     address treasury;
     address incentivesController;
     string underlyingAssetName;
-    string aTokenName;
-    string aTokenSymbol;
+    // string aTokenName;
+    // string aTokenSymbol;
     string variableDebtTokenName;
     string variableDebtTokenSymbol;
     string stableDebtTokenName;
     string stableDebtTokenSymbol;
-    bytes params;
-  }
-
-  struct UpdateATokenInput {
-    address asset;
-    address treasury;
-    address incentivesController;
-    string name;
-    string symbol;
-    address implementation;
     bytes params;
   }
 
@@ -51,7 +41,8 @@ interface ILendingPoolConfigurator {
    **/
   event ReserveInitialized(
     address indexed asset,
-    address indexed aToken,
+    // address indexed aToken, // @DIIMIIM: no longer used
+    uint256 tokenId,
     address stableDebtToken,
     address variableDebtToken,
     address interestRateStrategyAddress

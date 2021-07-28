@@ -50,6 +50,7 @@ contract AaveProtocolDataProvider {
     return reservesTokens;
   }
 
+/*
   function getAllATokens() external view returns (TokenData[] memory) {
     ILendingPool pool = ILendingPool(ADDRESSES_PROVIDER.getLendingPool());
     address[] memory reserves = pool.getReservesList();
@@ -63,6 +64,7 @@ contract AaveProtocolDataProvider {
     }
     return aTokens;
   }
+*/
 
   function getReserveConfigurationData(address asset)
     external
@@ -111,8 +113,9 @@ contract AaveProtocolDataProvider {
     DataTypes.ReserveData memory reserve =
       ILendingPool(ADDRESSES_PROVIDER.getLendingPool()).getReserveData(asset);
 
+    // @DIIMIIM: Get nft liquidity here, first param
     return (
-      IERC20Detailed(asset).balanceOf(reserve.aTokenAddress),
+      uint256(0), //IERC20Detailed(asset).balanceOf(reserve.aTokenAddress),
       IERC20Detailed(reserve.stableDebtTokenAddress).totalSupply(),
       IERC20Detailed(reserve.variableDebtTokenAddress).totalSupply(),
       reserve.currentLiquidityRate,
@@ -146,7 +149,8 @@ contract AaveProtocolDataProvider {
     DataTypes.UserConfigurationMap memory userConfig =
       ILendingPool(ADDRESSES_PROVIDER.getLendingPool()).getUserConfiguration(user);
 
-    currentATokenBalance = IERC20Detailed(reserve.aTokenAddress).balanceOf(user);
+    // @DIIMIIM: Get nft liquidity here, first param or remove this return value
+    currentATokenBalance = uint256(0); //IERC20Detailed(reserve.aTokenAddress).balanceOf(user);
     currentVariableDebt = IERC20Detailed(reserve.variableDebtTokenAddress).balanceOf(user);
     currentStableDebt = IERC20Detailed(reserve.stableDebtTokenAddress).balanceOf(user);
     principalStableDebt = IStableDebtToken(reserve.stableDebtTokenAddress).principalBalanceOf(user);
@@ -163,7 +167,6 @@ contract AaveProtocolDataProvider {
     external
     view
     returns (
-      address aTokenAddress,
       address stableDebtTokenAddress,
       address variableDebtTokenAddress
     )
@@ -172,7 +175,6 @@ contract AaveProtocolDataProvider {
       ILendingPool(ADDRESSES_PROVIDER.getLendingPool()).getReserveData(asset);
 
     return (
-      reserve.aTokenAddress,
       reserve.stableDebtTokenAddress,
       reserve.variableDebtTokenAddress
     );

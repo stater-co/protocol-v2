@@ -111,14 +111,14 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
 
     ValidationLogic.validateDeposit(reserve, amount);
 
-    address aToken = reserve.aTokenAddress;
+    address aToken = address(0); // @DIIMIIM: Use the nft address here //reserve.aTokenAddress;
 
     reserve.updateState();
     reserve.updateInterestRates(asset, aToken, amount, 0);
 
     IERC20(asset).safeTransferFrom(msg.sender, aToken, amount);
 
-    bool isFirstDeposit = IAToken(aToken).mint(onBehalfOf, amount, reserve.liquidityIndex);
+    bool isFirstDeposit = true; // @DIIMIIM: Mint or update the nft //IAToken(aToken).mint(onBehalfOf, amount, reserve.liquidityIndex);
 
     if (isFirstDeposit) {
       _usersConfig[onBehalfOf].setUsingAsCollateral(reserve.id, true);
@@ -146,9 +146,9 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
   ) external override whenNotPaused returns (uint256) {
     DataTypes.ReserveData storage reserve = _reserves[asset];
 
-    address aToken = reserve.aTokenAddress;
+    address aToken = address(0); // @DIIMIIM: Get the nft address here //reserve.aTokenAddress;
 
-    uint256 userBalance = IAToken(aToken).balanceOf(msg.sender);
+    uint256 userBalance = uint256(0); // @DIIMIIM: Get nft liquidity here //IAToken(aToken).balanceOf(msg.sender);
 
     uint256 amountToWithdraw = amount;
 
@@ -176,7 +176,7 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
       emit ReserveUsedAsCollateralDisabled(asset, msg.sender);
     }
 
-    IAToken(aToken).burn(msg.sender, to, amountToWithdraw, reserve.liquidityIndex);
+    // @DIIMIIM: burn nft or decrease its liquidity //IAToken(aToken).burn(msg.sender, to, amountToWithdraw, reserve.liquidityIndex);
 
     emit Withdraw(asset, msg.sender, to, amountToWithdraw);
 
@@ -214,7 +214,8 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
         onBehalfOf,
         amount,
         interestRateMode,
-        reserve.aTokenAddress,
+        reserver.tokenId,
+        //reserve.aTokenAddress,
         referralCode,
         true
       )
@@ -273,7 +274,7 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
       );
     }
 
-    address aToken = reserve.aTokenAddress;
+    address aToken = address(0); // @DIIMIIM: nft address here //reserve.aTokenAddress;
     reserve.updateInterestRates(asset, aToken, paybackAmount, 0);
 
     if (stableDebt.add(variableDebt).sub(paybackAmount) == 0) {
@@ -282,7 +283,7 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
 
     IERC20(asset).safeTransferFrom(msg.sender, aToken, paybackAmount);
 
-    IAToken(aToken).handleRepayment(msg.sender, paybackAmount);
+    // @DIIMIIM: update nft here, repayment //IAToken(aToken).handleRepayment(msg.sender, paybackAmount);
 
     emit Repay(asset, onBehalfOf, msg.sender, paybackAmount);
 
@@ -333,7 +334,7 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
       );
     }
 
-    reserve.updateInterestRates(asset, reserve.aTokenAddress, 0, 0);
+    reserve.updateInterestRates(asset, address(0) /* @DIIMIIM: nft address here reserve.aTokenAddress*/ , 0, 0);
 
     emit Swap(asset, msg.sender, rateMode);
   }
@@ -352,7 +353,7 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
 
     IERC20 stableDebtToken = IERC20(reserve.stableDebtTokenAddress);
     IERC20 variableDebtToken = IERC20(reserve.variableDebtTokenAddress);
-    address aTokenAddress = reserve.aTokenAddress;
+    address aTokenAddress = address(0); // @DIIMIIM: nft address here //reserve.aTokenAddress;
 
     uint256 stableDebt = IERC20(stableDebtToken).balanceOf(user);
 
@@ -432,6 +433,9 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
     address collateralManager = _addressesProvider.getLendingPoolCollateralManager();
 
     //solium-disable-next-line
+    /*
+     * @DIIMIIM: Here, in case of receiveAToken I suppose we need to transfer a part of the nft to the user who calls the liquidationCall
+     */
     (bool success, bytes memory result) =
       collateralManager.delegatecall(
         abi.encodeWithSignature(
@@ -456,7 +460,7 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
     address oracle;
     uint256 i;
     address currentAsset;
-    address currentATokenAddress;
+    //address currentATokenAddress;
     uint256 currentAmount;
     uint256 currentPremium;
     uint256 currentAmountPlusPremium;
@@ -493,17 +497,19 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
 
     ValidationLogic.validateFlashloan(assets, amounts);
 
-    address[] memory aTokenAddresses = new address[](assets.length);
+    //address[] memory aTokenAddresses = new address[](assets.length);
     uint256[] memory premiums = new uint256[](assets.length);
 
     vars.receiver = IFlashLoanReceiver(receiverAddress);
 
     for (vars.i = 0; vars.i < assets.length; vars.i++) {
-      aTokenAddresses[vars.i] = _reserves[assets[vars.i]].aTokenAddress;
+      //aTokenAddresses[vars.i] = _reserves[assets[vars.i]].aTokenAddress;
 
       premiums[vars.i] = amounts[vars.i].mul(_flashLoanPremiumTotal).div(10000);
 
-      IAToken(aTokenAddresses[vars.i]).transferUnderlyingTo(receiverAddress, amounts[vars.i]);
+      //IAToken(aTokenAddresses[vars.i]).transferUnderlyingTo(receiverAddress, amounts[vars.i]);
+
+      // @DIIMIIM: Transfer nft
     }
 
     require(
@@ -515,7 +521,7 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
       vars.currentAsset = assets[vars.i];
       vars.currentAmount = amounts[vars.i];
       vars.currentPremium = premiums[vars.i];
-      vars.currentATokenAddress = aTokenAddresses[vars.i];
+      vars.currentATokenAddress = address(0); // @DIIMIIM: nft address here  // aTokenAddresses[vars.i];
       vars.currentAmountPlusPremium = vars.currentAmount.add(vars.currentPremium);
 
       if (DataTypes.InterestRateMode(modes[vars.i]) == DataTypes.InterestRateMode.NONE) {
@@ -546,6 +552,7 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
             onBehalfOf,
             vars.currentAmount,
             modes[vars.i],
+            vars.tokenId,
             vars.currentATokenAddress,
             referralCode,
             false
@@ -744,7 +751,7 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
     uint256 balanceFromBefore,
     uint256 balanceToBefore
   ) external override whenNotPaused {
-    require(msg.sender == _reserves[asset].aTokenAddress, Errors.LP_CALLER_MUST_BE_AN_ATOKEN);
+    require(msg.sender == address(0) /* @DIIMIIM : nft address will be used here _reserves[asset].aTokenAddress */, Errors.LP_CALLER_MUST_BE_AN_ATOKEN);
 
     ValidationLogic.validateTransfer(
       from,
@@ -784,14 +791,15 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
    **/
   function initReserve(
     address asset,
-    address aTokenAddress,
+    //address aTokenAddress,
     address stableDebtAddress,
     address variableDebtAddress,
     address interestRateStrategyAddress
   ) external override onlyLendingPoolConfigurator {
     require(Address.isContract(asset), Errors.LP_NOT_CONTRACT);
+    // @DIIMIIM: atokenaddress will be no longer used. The same nft contract for all reserves
     _reserves[asset].init(
-      aTokenAddress,
+      //aTokenAddress,
       stableDebtAddress,
       variableDebtAddress,
       interestRateStrategyAddress
@@ -847,7 +855,8 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
     address onBehalfOf;
     uint256 amount;
     uint256 interestRateMode;
-    address aTokenAddress;
+    uint256 tokenId;
+    //address aTokenAddress;
     uint16 referralCode;
     bool releaseUnderlying;
   }

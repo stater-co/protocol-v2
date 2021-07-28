@@ -314,7 +314,7 @@ library ValidationLogic {
     //if the usage ratio is below 95%, no rebalances are needed
     uint256 totalDebt =
       stableDebtToken.totalSupply().add(variableDebtToken.totalSupply()).wadToRay();
-    uint256 availableLiquidity = IERC20(reserveAddress).balanceOf(aTokenAddress).wadToRay();
+    uint256 availableLiquidity = /* IERC20(reserveAddress).balanceOf(aTokenAddress); */ uint256(0).wadToRay(); // @DIIMIIM: get nft liquidity
     uint256 usageRatio = totalDebt == 0 ? 0 : totalDebt.rayDiv(availableLiquidity.add(totalDebt));
 
     //if the liquidity rate is below REBALANCE_UP_THRESHOLD of the max variable APR at 95% usage,
