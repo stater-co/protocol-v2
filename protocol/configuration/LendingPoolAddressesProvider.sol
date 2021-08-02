@@ -27,6 +27,7 @@ contract LendingPoolAddressesProvider is Ownable, ILendingPoolAddressesProvider 
   bytes32 private constant LENDING_POOL_COLLATERAL_MANAGER = 'COLLATERAL_MANAGER';
   bytes32 private constant PRICE_ORACLE = 'PRICE_ORACLE';
   bytes32 private constant LENDING_RATE_ORACLE = 'LENDING_RATE_ORACLE';
+  bytes32 private constant STATER_NFT = 'STATER_NFT';
 
   constructor(string memory marketId) public {
     _setMarketId(marketId);
@@ -180,6 +181,15 @@ contract LendingPoolAddressesProvider is Ownable, ILendingPoolAddressesProvider 
   function setLendingRateOracle(address lendingRateOracle) external override onlyOwner {
     _addresses[LENDING_RATE_ORACLE] = lendingRateOracle;
     emit LendingRateOracleUpdated(lendingRateOracle);
+  }
+
+  function getStaterNft() external view override returns (address) {
+    return getAddress(STATER_NFT);
+  }
+
+  function setStaterNft(address staterNft) external override onlyOwner {
+    _addresses[STATER_NFT] = staterNft;
+    emit StaterNftUpdated(staterNft);
   }
 
   /**

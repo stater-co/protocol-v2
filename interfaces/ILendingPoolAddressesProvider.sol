@@ -17,6 +17,7 @@ interface ILendingPoolAddressesProvider {
   event LendingPoolCollateralManagerUpdated(address indexed newAddress);
   event PriceOracleUpdated(address indexed newAddress);
   event LendingRateOracleUpdated(address indexed newAddress);
+  event StaterNftUpdated(address indexed newAddress);
   event ProxyCreated(bytes32 id, address indexed newAddress);
   event AddressSet(bytes32 id, address indexed newAddress, bool hasProxy);
 

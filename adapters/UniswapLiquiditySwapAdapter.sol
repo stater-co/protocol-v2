@@ -6,6 +6,7 @@ import {BaseUniswapAdapter} from './BaseUniswapAdapter.sol';
 import {ILendingPoolAddressesProvider} from '../interfaces/ILendingPoolAddressesProvider.sol';
 import {IUniswapV2Router02} from '../interfaces/IUniswapV2Router02.sol';
 import {IERC20} from '../dependencies/openzeppelin/contracts/IERC20.sol';
+import {IStaterNft} from '../interfaces/IStaterNft.sol';
 
 /**
  * @title UniswapLiquiditySwapAdapter
@@ -101,25 +102,9 @@ contract UniswapLiquiditySwapAdapter is BaseUniswapAdapter {
     return true;
   }
 
-
-  /* @DIIMIIM: Before */
-  /*
   struct SwapAndDepositLocalVars {
     uint256 i;
     uint256 aTokenInitiatorBalance;
-    uint256 amountToSwap;
-    uint256 receivedAmount;
-    address aToken;
-  }
-  */
-
-
-  /* @DIIMIIM: After */
-  /* address aToken; from before will be globally set ( only 1 type of stater nft... or may be many ) */
-  struct SwapAndDepositLocalVars {
-    uint256 i;
-    uint256 aTokenInitiatorBalance;
-    uint256 tokenId;
     uint256 amountToSwap;
     uint256 receivedAmount;
   }
@@ -161,9 +146,8 @@ contract UniswapLiquiditySwapAdapter is BaseUniswapAdapter {
     SwapAndDepositLocalVars memory vars;
 
     for (vars.i = 0; vars.i < assetToSwapFromList.length; vars.i++) {
-      //@DIIMIIM: vars.aToken = _getReserveData(assetToSwapFromList[vars.i]).aTokenAddress;
 
-      vars.aTokenInitiatorBalance = IERC20(vars.aToken).balanceOf(msg.sender);
+      vars.aTokenInitiatorBalance =   IERC20(vars.aToken).balanceOf(msg.sender);
 
       vars.amountToSwap = amountToSwapList[vars.i] > vars.aTokenInitiatorBalance
         ? vars.aTokenInitiatorBalance
