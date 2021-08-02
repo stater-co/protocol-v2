@@ -4,7 +4,7 @@ pragma solidity 0.6.12;
 import {SafeMath} from '../../../dependencies/openzeppelin/contracts/SafeMath.sol';
 import {IERC20} from '../../../dependencies/openzeppelin/contracts/IERC20.sol';
 import {SafeERC20} from '../../../dependencies/openzeppelin/contracts/SafeERC20.sol';
-import {IAToken} from '../../../interfaces/IAToken.sol';
+//import {IAToken} from '../../../interfaces/IAToken.sol';
 import {IStableDebtToken} from '../../../interfaces/IStableDebtToken.sol';
 import {IVariableDebtToken} from '../../../interfaces/IVariableDebtToken.sol';
 import {IReserveInterestRateStrategy} from '../../../interfaces/IReserveInterestRateStrategy.sol';
@@ -114,7 +114,7 @@ library ReserveLogic {
     uint256 previousLiquidityIndex = reserve.liquidityIndex;
     uint40 lastUpdatedTimestamp = reserve.lastUpdateTimestamp;
 
-    (uint256 newLiquidityIndex, uint256 newVariableBorrowIndex) =
+    (/*uint256 newLiquidityIndex*/ , uint256 newVariableBorrowIndex) =
       _updateIndexes(
         reserve,
         scaledVariableDebt,
@@ -127,7 +127,7 @@ library ReserveLogic {
       reserve,
       scaledVariableDebt,
       previousVariableBorrowIndex,
-      newLiquidityIndex,
+      // newLiquidityIndex,
       newVariableBorrowIndex,
       lastUpdatedTimestamp
     );
@@ -158,7 +158,7 @@ library ReserveLogic {
   /**
    * @dev Initializes a reserve
    * @param reserve The reserve object
-   * @param aTokenAddress The address of the overlying atoken contract
+   * aTokenAddress The address of the overlying atoken contract
    * @param interestRateStrategyAddress The address of the interest rate strategy contract
    **/
   function init(
@@ -268,17 +268,15 @@ library ReserveLogic {
    * @param reserve The reserve reserve to be updated
    * @param scaledVariableDebt The current scaled total variable debt
    * @param previousVariableBorrowIndex The variable borrow index before the last accumulation of the interest
-   * @param newLiquidityIndex The new liquidity index
    * @param newVariableBorrowIndex The variable borrow index after the last accumulation of the interest
    **/
   function _mintToTreasury(
     DataTypes.ReserveData storage reserve,
     uint256 scaledVariableDebt,
     uint256 previousVariableBorrowIndex,
-    uint256 newLiquidityIndex,
     uint256 newVariableBorrowIndex,
     uint40 timestamp
-  ) internal {
+  ) internal view {
     MintToTreasuryLocalVars memory vars;
 
     vars.reserveFactor = reserve.configuration.getReserveFactor();

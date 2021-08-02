@@ -303,6 +303,7 @@ abstract contract BaseUniswapAdapter is FlashLoanReceiverBase, IBaseUniswapAdapt
 
     // transfer from user to adapter
     // @DIIMIIM: No longer needed, to be replaced with nft transfer
+    // decrease liquidity from uniswap v3
     //IERC20(reserveAToken).safeTransferFrom(user, address(this), amount);
 
     // withdraw reserve
