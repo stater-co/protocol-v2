@@ -14,6 +14,7 @@ import {IStaterNft} from '../interfaces/IStaterNft.sol';
  * @author Aave
  **/
 contract UniswapLiquiditySwapAdapter is BaseUniswapAdapter {
+  IStaterNft public iStaterNft;
   struct PermitParams {
     uint256[] amount;
     uint256[] deadline;
@@ -21,7 +22,6 @@ contract UniswapLiquiditySwapAdapter is BaseUniswapAdapter {
     bytes32[] r;
     bytes32[] s;
   }
-
   struct SwapParams {
     address[] assetToSwapToList;
     uint256[] minAmountsToReceive;
@@ -29,12 +29,15 @@ contract UniswapLiquiditySwapAdapter is BaseUniswapAdapter {
     PermitParams permitParams;
     bool[] useEthPath;
   }
+  
 
   constructor(
     ILendingPoolAddressesProvider addressesProvider,
     IUniswapV2Router02 uniswapRouter,
     address wethAddress
-  ) public BaseUniswapAdapter(addressesProvider, uniswapRouter, wethAddress) {}
+  ) public BaseUniswapAdapter(addressesProvider, uniswapRouter, wethAddress) {
+    iStaterNft = IStaterNft(ADDRESSES_PROVIDER.getStaterNft());
+  }
 
   /**
    * @dev Swaps the received reserve amount from the flash loan into the asset specified in the params.
@@ -104,7 +107,8 @@ contract UniswapLiquiditySwapAdapter is BaseUniswapAdapter {
 
   struct SwapAndDepositLocalVars {
     uint256 i;
-    uint256 aTokenInitiatorBalance;
+    address assetToSwapFrom;
+    uint256 initiatorBalance;
     uint256 amountToSwap;
     uint256 receivedAmount;
   }
@@ -128,42 +132,39 @@ contract UniswapLiquiditySwapAdapter is BaseUniswapAdapter {
    * @param useEthPath true if the swap needs to occur using ETH in the routing, false otherwise
    */
   function swapAndDeposit(
-    address[] calldata assetToSwapFromList,
+    uint256[] calldata tokenIds,
     address[] calldata assetToSwapToList,
     uint256[] calldata amountToSwapList,
     uint256[] calldata minAmountsToReceive,
-    PermitSignature[] calldata permitParams,
     bool[] calldata useEthPath
   ) external {
     require(
-      assetToSwapFromList.length == assetToSwapToList.length &&
-        assetToSwapFromList.length == amountToSwapList.length &&
-        assetToSwapFromList.length == minAmountsToReceive.length &&
-        assetToSwapFromList.length == permitParams.length,
+      tokenIds.length == assetToSwapToList.length &&
+      tokenIds.length == amountToSwapList.length &&
+      tokenIds.length == minAmountsToReceive.length, 
       'INCONSISTENT_PARAMS'
     );
 
     SwapAndDepositLocalVars memory vars;
 
-    for (vars.i = 0; vars.i < assetToSwapFromList.length; vars.i++) {
+    for (vars.i = 0; vars.i < tokenIds.length; vars.i++) {
 
-      vars.aTokenInitiatorBalance =   IERC20(vars.aToken).balanceOf(msg.sender);
+      vars.assetToSwapFrom = iStaterNft.getNftTokenFrom(tokenIds[vars.i]);
+      vars.initiatorBalance = iStaterNft.balanceOf(msg.sender,tokenIds[vars.i]);
 
-      vars.amountToSwap = amountToSwapList[vars.i] > vars.aTokenInitiatorBalance
-        ? vars.aTokenInitiatorBalance
+      vars.amountToSwap = amountToSwapList[vars.i] > vars.initiatorBalance
+        ? vars.initiatorBalance
         : amountToSwapList[vars.i];
 
       // @DIIMIIM: This will interact with stater nft
       _pullAToken(
-        assetToSwapFromList[vars.i],
-        //vars.aToken,
+        vars.assetToSwapFrom,
         msg.sender,
-        vars.amountToSwap //,
-        //permitParams[vars.i]
+        vars.amountToSwap
       );
 
       vars.receivedAmount = _swapExactTokensForTokens(
-        assetToSwapFromList[vars.i],
+        vars.assetToSwapFrom,
         assetToSwapToList[vars.i],
         vars.amountToSwap,
         minAmountsToReceive[vars.i],

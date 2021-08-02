@@ -36,6 +36,7 @@ abstract contract BaseUniswapAdapter is FlashLoanReceiverBase, IBaseUniswapAdapt
   address public immutable override WETH_ADDRESS;
   IPriceOracleGetter public immutable override ORACLE;
   IUniswapV2Router02 public immutable override UNISWAP_ROUTER;
+  ILendingPoolAddressesProvider public immutable ADDRESSES_PROVIDER;
 
   constructor(
     ILendingPoolAddressesProvider addressesProvider,
@@ -45,6 +46,7 @@ abstract contract BaseUniswapAdapter is FlashLoanReceiverBase, IBaseUniswapAdapt
     ORACLE = IPriceOracleGetter(addressesProvider.getPriceOracle());
     UNISWAP_ROUTER = uniswapRouter;
     WETH_ADDRESS = wethAddress;
+    ADDRESSES_PROVIDER = addressesProvider;
   }
 
   /**
@@ -277,11 +279,9 @@ abstract contract BaseUniswapAdapter is FlashLoanReceiverBase, IBaseUniswapAdapt
    * @DIIMIIM: Judging by the function description this will withdraw the nft from the user's account
    */
   function _pullAToken(
-    address reserve, // address of the aToken asset
-    // address reserveAToken // @DIIMIIM: the aToken address, will be no longer used,
+    address reserve,
     address user,
-    uint256 amount //,
-    // PermitSignature memory permitSignature // @DIIMIIM: Without aToken system this will become obsolete
+    uint256 amount
   ) internal {
 
     /*

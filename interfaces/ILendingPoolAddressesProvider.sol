@@ -55,6 +55,10 @@ interface ILendingPoolAddressesProvider {
 
   function setPriceOracle(address priceOracle) external;
 
+  function getStaterNft() external view override returns (address);
+
+  function setStaterNft(address staterNft) external;
+
   function getLendingRateOracle() external view returns (address);
 
   function setLendingRateOracle(address lendingRateOracle) external;
