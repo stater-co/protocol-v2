@@ -1,5 +1,5 @@
-pragma solidity =0.7.6;
-import '@openzeppelin/contracts/token/ERC721/ERC721.sol';
+pragma solidity =0.6.12;
+import '../dependencies/openzeppelin/contracts/token/ERC721/ERC721.sol';
 
 contract NFTPosition is ERC721 {
 
@@ -15,7 +15,7 @@ contract NFTPosition is ERC721 {
         // the address that is approved for spending this token
         address operator;
         // the ID of the pools with which this token is connected
-        uint80 poolIds[];
+        uint8[] poolIds;
         // the liquidity of the position
         uint128 liquidity;
         // the list of the collateral uniswap v3 positions
