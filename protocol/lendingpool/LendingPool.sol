@@ -26,6 +26,7 @@ import {ReserveConfiguration} from '../libraries/configuration/ReserveConfigurat
 import {UserConfiguration} from '../libraries/configuration/UserConfiguration.sol';
 import {DataTypes} from '../libraries/types/DataTypes.sol';
 import {LendingPoolStorage} from './LendingPoolStorage.sol';
+import {IStaterNft} from '../interfaces/IStaterNft.sol';
 
 /**
  * @title LendingPool contract
@@ -60,6 +61,14 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
   modifier onlyLendingPoolConfigurator() {
     _onlyLendingPoolConfigurator();
     _;
+  }
+
+  constructor(
+    ILendingPoolAddressesProvider addressesProvider,
+    IUniswapV2Router02 uniswapRouter,
+    address wethAddress
+  ) public BaseUniswapAdapter(addressesProvider, uniswapRouter, wethAddress) {
+    iStaterNft = IStaterNft(ADDRESSES_PROVIDER.getStaterNft());
   }
 
   function _whenNotPaused() internal view {
@@ -215,8 +224,7 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
         onBehalfOf,
         amount,
         interestRateMode,
-        reserver.tokenId,
-        //reserve.aTokenAddress,
+        reserve.tokenId,
         referralCode,
         true
       )
@@ -430,7 +438,7 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
     address user,
     uint256 debtToCover,
     bool receiveAToken
-  ) external override whenNotPaused {
+  ) external whenNotPaused {
     address collateralManager = _addressesProvider.getLendingPoolCollateralManager();
 
     //solium-disable-next-line
@@ -461,7 +469,6 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
     address oracle;
     uint256 i;
     address currentAsset;
-    //address currentATokenAddress;
     uint256 currentAmount;
     uint256 currentPremium;
     uint256 currentAmountPlusPremium;
@@ -522,7 +529,6 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
       vars.currentAsset = assets[vars.i];
       vars.currentAmount = amounts[vars.i];
       vars.currentPremium = premiums[vars.i];
-      vars.currentATokenAddress = address(0); // @DIIMIIM: nft address here  // aTokenAddresses[vars.i];
       vars.currentAmountPlusPremium = vars.currentAmount.add(vars.currentPremium);
 
       if (DataTypes.InterestRateMode(modes[vars.i]) == DataTypes.InterestRateMode.NONE) {
@@ -533,7 +539,7 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
         );
         _reserves[vars.currentAsset].updateInterestRates(
           vars.currentAsset,
-          vars.currentATokenAddress,
+          iStaterNft.getNftTokenFrom(tokenIds[vars.i]);
           vars.currentAmountPlusPremium,
           0
         );
@@ -554,7 +560,6 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
             vars.currentAmount,
             modes[vars.i],
             vars.tokenId,
-            vars.currentATokenAddress,
             referralCode,
             false
           )
@@ -785,9 +790,9 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
    * interest rate strategy
    * - Only callable by the LendingPoolConfigurator contract
    * @param asset The address of the underlying asset of the reserve
-   * @param aTokenAddress The address of the aToken that will be assigned to the reserve
+   * aTokenAddress The address of the aToken that will be assigned to the reserve
    * @param stableDebtAddress The address of the StableDebtToken that will be assigned to the reserve
-   * @param aTokenAddress The address of the VariableDebtToken that will be assigned to the reserve
+   * aTokenAddress The address of the VariableDebtToken that will be assigned to the reserve
    * @param interestRateStrategyAddress The address of the interest rate strategy contract
    **/
   function initReserve(
@@ -857,7 +862,6 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
     uint256 amount;
     uint256 interestRateMode;
     uint256 tokenId;
-    //address aTokenAddress;
     uint16 referralCode;
     bool releaseUnderlying;
   }

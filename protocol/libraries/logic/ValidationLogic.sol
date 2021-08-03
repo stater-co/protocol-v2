@@ -298,7 +298,7 @@ library ValidationLogic {
    * @param reserveAddress The address of the reserve
    * @param stableDebtToken The stable debt token instance
    * @param variableDebtToken The variable debt token instance
-   * @param aTokenAddress The address of the aToken contract
+   * aTokenAddress The address of the aToken contract
    */
   function validateRebalanceStableBorrowRate(
     DataTypes.ReserveData storage reserve,
