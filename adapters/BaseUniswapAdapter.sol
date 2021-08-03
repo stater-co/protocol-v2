@@ -3,11 +3,11 @@ pragma solidity 0.6.12;
 pragma experimental ABIEncoderV2;
 
 import {PercentageMath} from '../protocol/libraries/math/PercentageMath.sol';
-import {SafeMath} from '../dependencies/openzeppelin/contracts/SafeMath.sol';
-import {IERC20} from '../dependencies/openzeppelin/contracts/IERC20.sol';
-import {IERC20Detailed} from '../dependencies/openzeppelin/contracts/IERC20Detailed.sol';
-import {SafeERC20} from '../dependencies/openzeppelin/contracts/SafeERC20.sol';
-import {Ownable} from '../dependencies/openzeppelin/contracts/Ownable.sol';
+import {SafeMath} from '../dependencies/openzeppelin/contracts/math/SafeMath.sol';
+import {IERC20} from '../dependencies/openzeppelin/contracts/token/ERC20/IERC20.sol';
+import {IERC20Detailed} from '../dependencies/openzeppelin/contracts/token/ERC20/IERC20Detailed.sol';
+import {SafeERC20} from '../dependencies/openzeppelin/contracts/token/ERC20/SafeERC20.sol';
+import {Ownable} from '../dependencies/openzeppelin/contracts/access/Ownable.sol';
 import {ILendingPoolAddressesProvider} from '../interfaces/ILendingPoolAddressesProvider.sol';
 import {DataTypes} from '../protocol/libraries/types/DataTypes.sol';
 import {IUniswapV2Router02} from '../interfaces/IUniswapV2Router02.sol';

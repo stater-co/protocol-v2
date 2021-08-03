@@ -2,8 +2,8 @@
 pragma solidity =0.7.6;
 pragma abicoder v2;
 
-import '@uniswap/v3-core/contracts/libraries/LowGasSafeMath.sol';
-import '@uniswap/v2-core/contracts/interfaces/IUniswapV2Pair.sol';
+import '../core/libraries/LowGasSafeMath.sol';
+import '../core/interfaces/IUniswapV2Pair.sol';
 
 import './interfaces/INonfungiblePositionManager.sol';
 

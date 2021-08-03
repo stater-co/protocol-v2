@@ -2,11 +2,11 @@
 pragma solidity 0.6.12;
 
 import {Ownable} from '../dependencies/openzeppelin/contracts/Ownable.sol';
-import {IERC20} from '../dependencies/openzeppelin/contracts/IERC20.sol';
+import {IERC20} from '../dependencies/openzeppelin/contracts/token/ERC20/IERC20.sol';
 
 import {IPriceOracleGetter} from '../interfaces/IPriceOracleGetter.sol';
 import {IChainlinkAggregator} from '../interfaces/IChainlinkAggregator.sol';
-import {SafeERC20} from '../dependencies/openzeppelin/contracts/SafeERC20.sol';
+import {SafeERC20} from '../dependencies/openzeppelin/contracts/token/ERC20/SafeERC20.sol';
 
 /// @title AaveOracle
 /// @author Aave

@@ -5,7 +5,7 @@ pragma experimental ABIEncoderV2;
 import {BaseUniswapAdapter} from './BaseUniswapAdapter.sol';
 import {ILendingPoolAddressesProvider} from '../interfaces/ILendingPoolAddressesProvider.sol';
 import {IUniswapV2Router02} from '../interfaces/IUniswapV2Router02.sol';
-import {IERC20} from '../dependencies/openzeppelin/contracts/IERC20.sol';
+import {IERC20} from '../dependencies/openzeppelin/contracts/token/ERC20/IERC20.sol';
 import {IStaterNft} from '../interfaces/IStaterNft.sol';
 
 /**
