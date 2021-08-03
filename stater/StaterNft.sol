@@ -2,7 +2,7 @@
 pragma solidity =0.6.12;
 import "../dependencies/openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "./uniswap-v3/core/libraries/Position.sol";
-import {INonfungiblePositionManager} from '../interfaces/INonfungiblePositionManager.sol';
+import {INonfungiblePositionManager} from '../dependencies/uniswap-v3/periphery/interfaces/INonfungiblePositionManager.sol';
 
 contract StaterNft is ERC721 {
 
@@ -21,23 +21,45 @@ contract StaterNft is ERC721 {
     using Position for Position.Info;
     mapping(uint256 => Position.Info) positions;
 
-    function totalSupply(uint256 tokenId) external view returns(uint128) {
-        returns positions[tokenId].liquidity; // to implement the right logic later, right now for tests purpose only
+    function totalSupply(uint256 positionId) external view returns(uint128) {
+        returns positions[positionId].liquidity; // to implement the right logic later, right now for tests purpose only
     }
 
     // @DIIMIIM: Will return the child token id
-    function splitNft(uint256 parentTokenId, uint128 toSplit) external returns(uint256) {
+    function splitNft(uint256 parentPositionId, uint128 toSplit) external returns(uint256) {
         
         // @DIIMIIM: To be discussed with Raziel
-        return parentTokenId;
+        return parentPositionId;
+    }
+
+    function balanceOf(uint256 positionId) external view returns(uint128) {
+        (,,,,,,,uint128 balance,,,,) = nonFungiblePositionManager.positions(positionId);
+        return balance;
+    }
+
+    // @DIIMIIM: This must handle both cases:
+    // 1) A real mint, where a deposit is created for the first time
+    // 2) A deposit, where the nft will be updated
+    function mint() external returns(uint256,uint128,uint256,uint256) {
+        returns nonFungiblePositionManager.mint(
+                    INonfungiblePositionManager.MintParams({
+                        token0
+                        token1
+                        fee
+                        tickLower
+                        tickUpper
+                        amount0Desired
+                        amount1Desired
+                        amount0Min
+                        amount1Min
+                        recipient
+                        deadline
+                    })
+                );
     }
 
     /*
     function position(uint256 tokenId) external view {
-        return;
-    }
-
-    function mint() external {
         return;
     }
 

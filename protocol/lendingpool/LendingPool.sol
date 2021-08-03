@@ -99,24 +99,35 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
    * @param referralCode Code used to register the integrator originating the operation, for potential rewards.
    *   0 if the action is executed directly by the user, without any middle-man
    **/
+  struct DepositParams {
+    address asset;
+    uint256 amount;
+    address onBehalfOf;
+    uint16 referralCode;
+    bool hasCurrency;
+    bool hasNft;
+    bool nftId;
+  }
   function deposit(
-    address asset,
-    uint256 amount,
-    address onBehalfOf,
-    uint16 referralCode
+    DepositParams memory params
   ) external override whenNotPaused {
-    DataTypes.ReserveData storage reserve = _reserves[asset];
+    DataTypes.ReserveData storage reserve = _reserves[params.asset];
 
-    ValidationLogic.validateDeposit(reserve, amount);
+    if (hasNft) {
+      params.amount = staterNft.balanceOf(nftId);
+    }
 
-    address aToken = address(0); // @DIIMIIM: Use the nft address here //reserve.aTokenAddress;
+    ValidationLogic.validateDeposit(reserve, params.amount);
 
     reserve.updateState();
-    reserve.updateInterestRates(asset, aToken, amount, 0);
+    reserve.updateInterestRates(asset, STATER_NFT, params.amount, 0);
 
-    IERC20(asset).safeTransferFrom(msg.sender, aToken, amount);
+    IERC20(asset).safeTransferFrom(msg.sender, STATER_NFT, amount);
 
-    bool isFirstDeposit = true; // @DIIMIIM: Mint or update the nft //IAToken(aToken).mint(onBehalfOf, amount, reserve.liquidityIndex);
+    bool isFirstDeposit = staterNft.mint(
+      asset,
+
+    ); // @DIIMIIM: Mint or update the nft //IAToken(aToken).mint(onBehalfOf, amount, reserve.liquidityIndex);
 
     if (isFirstDeposit) {
       _usersConfig[onBehalfOf].setUsingAsCollateral(reserve.id, true);

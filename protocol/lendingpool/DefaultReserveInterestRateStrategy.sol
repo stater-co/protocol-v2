@@ -8,6 +8,8 @@ import {PercentageMath} from '../libraries/math/PercentageMath.sol';
 import {ILendingPoolAddressesProvider} from '../../interfaces/ILendingPoolAddressesProvider.sol';
 import {ILendingRateOracle} from '../../interfaces/ILendingRateOracle.sol';
 import {IERC20} from '../../dependencies/openzeppelin/contracts/token/ERC20/IERC20.sol';
+import {LendingPoolStaterConnector} from '../configuration/LendingPoolStaterConnector.sol';
+import {IStaterNft} from '../../interfaces/IStaterNft.sol';
 
 /**
  * @title DefaultReserveInterestRateStrategy contract
@@ -18,7 +20,7 @@ import {IERC20} from '../../dependencies/openzeppelin/contracts/token/ERC20/IERC
  *   of the LendingPoolAddressesProvider
  * @author Aave
  **/
-contract DefaultReserveInterestRateStrategy is IReserveInterestRateStrategy {
+contract DefaultReserveInterestRateStrategy is IReserveInterestRateStrategy, LendingPoolStaterConnector {
   using WadRayMath for uint256;
   using SafeMath for uint256;
   using PercentageMath for uint256;
@@ -127,7 +129,7 @@ contract DefaultReserveInterestRateStrategy is IReserveInterestRateStrategy {
       uint256
     )
   {
-    uint256 availableLiquidity = uint256(0); // @DIIMIIM: Get nft liquidity //IERC20(reserve).balanceOf(aToken);
+    uint256 availableLiquidity = staterNft.balanceOf(nftId); uint256(0); // @DIIMIIM: Get nft liquidity //IERC20(reserve).balanceOf(aToken);
     //avoid stack too deep
     availableLiquidity = availableLiquidity.add(liquidityAdded).sub(liquidityTaken);
 
