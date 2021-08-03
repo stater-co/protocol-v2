@@ -76,20 +76,6 @@ contract MockUniswapV2Router02 is IUniswapV2Router02 {
     defaultMockValue = value;
   }
 
-  function getAmountsOut(uint256 amountIn, address[] calldata path)
-    external
-    view
-    override
-    returns (uint256[] memory)
-  {
-    uint256[] memory amounts = new uint256[](path.length);
-    amounts[0] = amountIn;
-    amounts[1] = _amountsOut[path[0]][path[1]][amountIn] > 0
-      ? _amountsOut[path[0]][path[1]][amountIn]
-      : defaultMockValue;
-    return amounts;
-  }
-
   function getAmountsIn(uint256 amountOut, address[] calldata path)
     external
     view

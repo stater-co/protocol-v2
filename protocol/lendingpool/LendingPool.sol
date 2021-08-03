@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity 0.6.12;
+pragma solidity >=0.6.12 <=0.8.6;
 pragma experimental ABIEncoderV2;
 
 import {SafeMath} from '../../dependencies/openzeppelin/contracts/math/SafeMath.sol';
@@ -10,7 +10,6 @@ import {Address} from '../../dependencies/openzeppelin/contracts/utils/Address.s
 
 import {ILendingPoolAddressesProvider} from '../../interfaces/ILendingPoolAddressesProvider.sol';
 import {IVariableDebtToken} from '../../interfaces/IVariableDebtToken.sol';
-import {IFlashLoanReceiver} from '../../flashloan/interfaces/IFlashLoanReceiver.sol';
 import {IPriceOracleGetter} from '../../interfaces/IPriceOracleGetter.sol';
 import {IStableDebtToken} from '../../interfaces/IStableDebtToken.sol';
 import {ILendingPool} from '../../interfaces/ILendingPool.sol';
@@ -26,7 +25,8 @@ import {ReserveConfiguration} from '../libraries/configuration/ReserveConfigurat
 import {UserConfiguration} from '../libraries/configuration/UserConfiguration.sol';
 import {DataTypes} from '../libraries/types/DataTypes.sol';
 import {LendingPoolStorage} from './LendingPoolStorage.sol';
-import {IStaterNft} from '../interfaces/IStaterNft.sol';
+import {LendingPoolStaterConnector} from '../configuration/LendingPoolStaterConnector.sol';
+import {IStaterNft} from '../../interfaces/IStaterNft.sol';
 
 /**
  * @title LendingPool contract
@@ -39,13 +39,12 @@ import {IStaterNft} from '../interfaces/IStaterNft.sol';
  *   # Swap their loans between variable and stable rate
  *   # Enable/disable their deposits as collateral rebalance stable rate borrow positions
  *   # Liquidate positions
- *   # Execute Flash Loans
  * - To be covered by a proxy contract, owned by the LendingPoolAddressesProvider of the specific market
  * - All admin functions are callable by the LendingPoolConfigurator contract defined also in the
  *   LendingPoolAddressesProvider
  * @author Aave
  **/
-contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage {
+contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage, LendingPoolStaterConnector {
   using SafeMath for uint256;
   using WadRayMath for uint256;
   using PercentageMath for uint256;
@@ -61,14 +60,6 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
   modifier onlyLendingPoolConfigurator() {
     _onlyLendingPoolConfigurator();
     _;
-  }
-
-  constructor(
-    ILendingPoolAddressesProvider addressesProvider,
-    IUniswapV2Router02 uniswapRouter,
-    address wethAddress
-  ) public BaseUniswapAdapter(addressesProvider, uniswapRouter, wethAddress) {
-    iStaterNft = IStaterNft(ADDRESSES_PROVIDER.getStaterNft());
   }
 
   function _whenNotPaused() internal view {
@@ -95,9 +86,6 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
    **/
   function initialize(ILendingPoolAddressesProvider provider) public initializer {
     _addressesProvider = provider;
-    _maxStableRateBorrowSizePercent = 2500;
-    _flashLoanPremiumTotal = 9;
-    _maxNumberOfReserves = 128;
   }
 
   /**
@@ -464,118 +452,6 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
     require(returnCode == 0, string(abi.encodePacked(returnMessage)));
   }
 
-  struct FlashLoanLocalVars {
-    IFlashLoanReceiver receiver;
-    address oracle;
-    uint256 i;
-    address currentAsset;
-    uint256 currentAmount;
-    uint256 currentPremium;
-    uint256 currentAmountPlusPremium;
-    address debtToken;
-  }
-
-  /**
-   * @dev Allows smartcontracts to access the liquidity of the pool within one transaction,
-   * as long as the amount taken plus a fee is returned.
-   * IMPORTANT There are security concerns for developers of flashloan receiver contracts that must be kept into consideration.
-   * For further details please visit https://developers.aave.com
-   * @param receiverAddress The address of the contract receiving the funds, implementing the IFlashLoanReceiver interface
-   * @param assets The addresses of the assets being flash-borrowed
-   * @param amounts The amounts amounts being flash-borrowed
-   * @param modes Types of the debt to open if the flash loan is not returned:
-   *   0 -> Don't open any debt, just revert if funds can't be transferred from the receiver
-   *   1 -> Open debt at stable rate for the value of the amount flash-borrowed to the `onBehalfOf` address
-   *   2 -> Open debt at variable rate for the value of the amount flash-borrowed to the `onBehalfOf` address
-   * @param onBehalfOf The address  that will receive the debt in the case of using on `modes` 1 or 2
-   * @param params Variadic packed params to pass to the receiver as extra information
-   * @param referralCode Code used to register the integrator originating the operation, for potential rewards.
-   *   0 if the action is executed directly by the user, without any middle-man
-   **/
-  function flashLoan(
-    address receiverAddress,
-    address[] calldata assets,
-    uint256[] calldata amounts,
-    uint256[] calldata modes,
-    address onBehalfOf,
-    bytes calldata params,
-    uint16 referralCode
-  ) external override whenNotPaused {
-    FlashLoanLocalVars memory vars;
-
-    ValidationLogic.validateFlashloan(assets, amounts);
-
-    //address[] memory aTokenAddresses = new address[](assets.length);
-    uint256[] memory premiums = new uint256[](assets.length);
-
-    vars.receiver = IFlashLoanReceiver(receiverAddress);
-
-    for (vars.i = 0; vars.i < assets.length; vars.i++) {
-      //aTokenAddresses[vars.i] = _reserves[assets[vars.i]].aTokenAddress;
-
-      premiums[vars.i] = amounts[vars.i].mul(_flashLoanPremiumTotal).div(10000);
-
-      //IAToken(aTokenAddresses[vars.i]).transferUnderlyingTo(receiverAddress, amounts[vars.i]);
-
-      // @DIIMIIM: Transfer nft
-    }
-
-    require(
-      vars.receiver.executeOperation(assets, amounts, premiums, msg.sender, params),
-      Errors.LP_INVALID_FLASH_LOAN_EXECUTOR_RETURN
-    );
-
-    for (vars.i = 0; vars.i < assets.length; vars.i++) {
-      vars.currentAsset = assets[vars.i];
-      vars.currentAmount = amounts[vars.i];
-      vars.currentPremium = premiums[vars.i];
-      vars.currentAmountPlusPremium = vars.currentAmount.add(vars.currentPremium);
-
-      if (DataTypes.InterestRateMode(modes[vars.i]) == DataTypes.InterestRateMode.NONE) {
-        _reserves[vars.currentAsset].updateState();
-        _reserves[vars.currentAsset].cumulateToLiquidityIndex(
-          IERC20(vars.currentATokenAddress).totalSupply(),
-          vars.currentPremium
-        );
-        _reserves[vars.currentAsset].updateInterestRates(
-          vars.currentAsset,
-          iStaterNft.getNftTokenFrom(tokenIds[vars.i]);
-          vars.currentAmountPlusPremium,
-          0
-        );
-
-        IERC20(vars.currentAsset).safeTransferFrom(
-          receiverAddress,
-          vars.currentATokenAddress,
-          vars.currentAmountPlusPremium
-        );
-      } else {
-        // If the user chose to not return the funds, the system checks if there is enough collateral and
-        // eventually opens a debt position
-        _executeBorrow(
-          ExecuteBorrowParams(
-            vars.currentAsset,
-            msg.sender,
-            onBehalfOf,
-            vars.currentAmount,
-            modes[vars.i],
-            vars.tokenId,
-            referralCode,
-            false
-          )
-        );
-      }
-      emit FlashLoan(
-        receiverAddress,
-        msg.sender,
-        vars.currentAsset,
-        vars.currentAmount,
-        vars.currentPremium,
-        referralCode
-      );
-    }
-  }
-
   /**
    * @dev Returns the state and configuration of the reserve
    * @param asset The address of the underlying asset of the reserve
@@ -716,27 +592,6 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
    **/
   function getAddressesProvider() external view override returns (ILendingPoolAddressesProvider) {
     return _addressesProvider;
-  }
-
-  /**
-   * @dev Returns the percentage of available liquidity that can be borrowed at once at stable rate
-   */
-  function MAX_STABLE_RATE_BORROW_SIZE_PERCENT() public view returns (uint256) {
-    return _maxStableRateBorrowSizePercent;
-  }
-
-  /**
-   * @dev Returns the fee on flash loans 
-   */
-  function FLASHLOAN_PREMIUM_TOTAL() public view returns (uint256) {
-    return _flashLoanPremiumTotal;
-  }
-
-  /**
-   * @dev Returns the maximum number of reserves supported to be listed in this LendingPool
-   */
-  function MAX_NUMBER_RESERVES() public view returns (uint256) {
-    return _maxNumberOfReserves;
   }
 
   /**
@@ -884,7 +739,7 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
       vars.amount,
       amountInETH,
       vars.interestRateMode,
-      _maxStableRateBorrowSizePercent,
+      maxStableRateBorrowSizePercent,
       _reserves,
       userConfig,
       _reservesList,
@@ -947,7 +802,7 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
   function _addReserveToList(address asset) internal {
     uint256 reservesCount = _reservesCount;
 
-    require(reservesCount < _maxNumberOfReserves, Errors.LP_NO_MORE_RESERVES_ALLOWED);
+    require(reservesCount < maxNumberOfReserves, Errors.LP_NO_MORE_RESERVES_ALLOWED);
 
     bool reserveAlreadyAdded = _reserves[asset].id != 0 || _reservesList[0] == asset;
 

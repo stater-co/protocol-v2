@@ -57,9 +57,5 @@ library DataTypes {
   }
 
   enum InterestRateMode {NONE, STABLE, VARIABLE}
-
-  struct SplitComponents {
-    address multicaller;
-    address positionsManager;
-  }
+  
 }

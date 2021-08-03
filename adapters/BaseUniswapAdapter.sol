@@ -13,7 +13,6 @@ import {DataTypes} from '../protocol/libraries/types/DataTypes.sol';
 import {IUniswapV2Router02} from '../interfaces/IUniswapV2Router02.sol';
 import {IPriceOracleGetter} from '../interfaces/IPriceOracleGetter.sol';
 import {IERC20WithPermit} from '../interfaces/IERC20WithPermit.sol';
-import {FlashLoanReceiverBase} from '../flashloan/base/FlashLoanReceiverBase.sol';
 import {IBaseUniswapAdapter} from './interfaces/IBaseUniswapAdapter.sol';
 
 /**
@@ -21,15 +20,13 @@ import {IBaseUniswapAdapter} from './interfaces/IBaseUniswapAdapter.sol';
  * @notice Implements the logic for performing assets swaps in Uniswap V2
  * @author Aave
  **/
-abstract contract BaseUniswapAdapter is FlashLoanReceiverBase, IBaseUniswapAdapter, Ownable {
+abstract contract BaseUniswapAdapter is IBaseUniswapAdapter, Ownable {
   using SafeMath for uint256;
   using PercentageMath for uint256;
   using SafeERC20 for IERC20;
 
   // Max slippage percent allowed
   uint256 public constant override MAX_SLIPPAGE_PERCENT = 3000; // 30%
-  // FLash Loan fee set in lending pool
-  uint256 public constant override FLASHLOAN_PREMIUM_TOTAL = 9;
   // USD oracle asset address
   address public constant override USD_ADDRESS = 0x10F7Fc1F91Ba351f9C629c5947AD69bD03C05b96;
 
@@ -42,48 +39,11 @@ abstract contract BaseUniswapAdapter is FlashLoanReceiverBase, IBaseUniswapAdapt
     ILendingPoolAddressesProvider addressesProvider,
     IUniswapV2Router02 uniswapRouter,
     address wethAddress
-  ) public FlashLoanReceiverBase(addressesProvider) {
+  ) public {
     ORACLE = IPriceOracleGetter(addressesProvider.getPriceOracle());
     UNISWAP_ROUTER = uniswapRouter;
     WETH_ADDRESS = wethAddress;
     ADDRESSES_PROVIDER = addressesProvider;
-  }
-
-  /**
-   * @dev Given an input asset amount, returns the maximum output amount of the other asset and the prices
-   * @param amountIn Amount of reserveIn
-   * @param reserveIn Address of the asset to be swap from
-   * @param reserveOut Address of the asset to be swap to
-   * @return uint256 Amount out of the reserveOut
-   * @return uint256 The price of out amount denominated in the reserveIn currency (18 decimals)
-   * @return uint256 In amount of reserveIn value denominated in USD (8 decimals)
-   * @return uint256 Out amount of reserveOut value denominated in USD (8 decimals)
-   */
-  function getAmountsOut(
-    uint256 amountIn,
-    address reserveIn,
-    address reserveOut
-  )
-    external
-    view
-    override
-    returns (
-      uint256,
-      uint256,
-      uint256,
-      uint256,
-      address[] memory
-    )
-  {
-    AmountCalc memory results = _getAmountsOutData(reserveIn, reserveOut, amountIn);
-
-    return (
-      results.calculatedAmount,
-      results.relativePrice,
-      results.amountInUsd,
-      results.amountOutUsd,
-      results.path
-    );
   }
 
   /**
@@ -342,155 +302,6 @@ abstract contract BaseUniswapAdapter is FlashLoanReceiverBase, IBaseUniswapAdapt
     uint256 reservePrice = _getPrice(reserve);
 
     return amount.mul(reservePrice).div(10**decimals).mul(ethUsdPrice).div(10**18);
-  }
-
-  /**
-   * @dev Given an input asset amount, returns the maximum output amount of the other asset
-   * @param reserveIn Address of the asset to be swap from
-   * @param reserveOut Address of the asset to be swap to
-   * @param amountIn Amount of reserveIn
-   * @return Struct containing the following information:
-   *   uint256 Amount out of the reserveOut
-   *   uint256 The price of out amount denominated in the reserveIn currency (18 decimals)
-   *   uint256 In amount of reserveIn value denominated in USD (8 decimals)
-   *   uint256 Out amount of reserveOut value denominated in USD (8 decimals)
-   */
-  function _getAmountsOutData(
-    address reserveIn,
-    address reserveOut,
-    uint256 amountIn
-  ) internal view returns (AmountCalc memory) {
-    // Subtract flash loan fee
-    uint256 finalAmountIn = amountIn.sub(amountIn.mul(FLASHLOAN_PREMIUM_TOTAL).div(10000));
-
-    if (reserveIn == reserveOut) {
-      uint256 reserveDecimals = _getDecimals(reserveIn);
-      address[] memory path = new address[](1);
-      path[0] = reserveIn;
-
-      return
-        AmountCalc(
-          finalAmountIn,
-          finalAmountIn.mul(10**18).div(amountIn),
-          _calcUsdValue(reserveIn, amountIn, reserveDecimals),
-          _calcUsdValue(reserveIn, finalAmountIn, reserveDecimals),
-          path
-        );
-    }
-
-    address[] memory simplePath = new address[](2);
-    simplePath[0] = reserveIn;
-    simplePath[1] = reserveOut;
-
-    uint256[] memory amountsWithoutWeth;
-    uint256[] memory amountsWithWeth;
-
-    address[] memory pathWithWeth = new address[](3);
-    if (reserveIn != WETH_ADDRESS && reserveOut != WETH_ADDRESS) {
-      pathWithWeth[0] = reserveIn;
-      pathWithWeth[1] = WETH_ADDRESS;
-      pathWithWeth[2] = reserveOut;
-
-      try UNISWAP_ROUTER.getAmountsOut(finalAmountIn, pathWithWeth) returns (
-        uint256[] memory resultsWithWeth
-      ) {
-        amountsWithWeth = resultsWithWeth;
-      } catch {
-        amountsWithWeth = new uint256[](3);
-      }
-    } else {
-      amountsWithWeth = new uint256[](3);
-    }
-
-    uint256 bestAmountOut;
-    try UNISWAP_ROUTER.getAmountsOut(finalAmountIn, simplePath) returns (
-      uint256[] memory resultAmounts
-    ) {
-      amountsWithoutWeth = resultAmounts;
-
-      bestAmountOut = (amountsWithWeth[2] > amountsWithoutWeth[1])
-        ? amountsWithWeth[2]
-        : amountsWithoutWeth[1];
-    } catch {
-      amountsWithoutWeth = new uint256[](2);
-      bestAmountOut = amountsWithWeth[2];
-    }
-
-    uint256 reserveInDecimals = _getDecimals(reserveIn);
-    uint256 reserveOutDecimals = _getDecimals(reserveOut);
-
-    uint256 outPerInPrice =
-      finalAmountIn.mul(10**18).mul(10**reserveOutDecimals).div(
-        bestAmountOut.mul(10**reserveInDecimals)
-      );
-
-    return
-      AmountCalc(
-        bestAmountOut,
-        outPerInPrice,
-        _calcUsdValue(reserveIn, amountIn, reserveInDecimals),
-        _calcUsdValue(reserveOut, bestAmountOut, reserveOutDecimals),
-        (bestAmountOut == 0) ? new address[](2) : (bestAmountOut == amountsWithoutWeth[1])
-          ? simplePath
-          : pathWithWeth
-      );
-  }
-
-  /**
-   * @dev Returns the minimum input asset amount required to buy the given output asset amount
-   * @param reserveIn Address of the asset to be swap from
-   * @param reserveOut Address of the asset to be swap to
-   * @param amountOut Amount of reserveOut
-   * @return Struct containing the following information:
-   *   uint256 Amount in of the reserveIn
-   *   uint256 The price of in amount denominated in the reserveOut currency (18 decimals)
-   *   uint256 In amount of reserveIn value denominated in USD (8 decimals)
-   *   uint256 Out amount of reserveOut value denominated in USD (8 decimals)
-   */
-  function _getAmountsInData(
-    address reserveIn,
-    address reserveOut,
-    uint256 amountOut
-  ) internal view returns (AmountCalc memory) {
-    if (reserveIn == reserveOut) {
-      // Add flash loan fee
-      uint256 amountIn = amountOut.add(amountOut.mul(FLASHLOAN_PREMIUM_TOTAL).div(10000));
-      uint256 reserveDecimals = _getDecimals(reserveIn);
-      address[] memory path = new address[](1);
-      path[0] = reserveIn;
-
-      return
-        AmountCalc(
-          amountIn,
-          amountOut.mul(10**18).div(amountIn),
-          _calcUsdValue(reserveIn, amountIn, reserveDecimals),
-          _calcUsdValue(reserveIn, amountOut, reserveDecimals),
-          path
-        );
-    }
-
-    (uint256[] memory amounts, address[] memory path) =
-      _getAmountsInAndPath(reserveIn, reserveOut, amountOut);
-
-    // Add flash loan fee
-    uint256 finalAmountIn = amounts[0].add(amounts[0].mul(FLASHLOAN_PREMIUM_TOTAL).div(10000));
-
-    uint256 reserveInDecimals = _getDecimals(reserveIn);
-    uint256 reserveOutDecimals = _getDecimals(reserveOut);
-
-    uint256 inPerOutPrice =
-      amountOut.mul(10**18).mul(10**reserveInDecimals).div(
-        finalAmountIn.mul(10**reserveOutDecimals)
-      );
-
-    return
-      AmountCalc(
-        finalAmountIn,
-        inPerOutPrice,
-        _calcUsdValue(reserveIn, finalAmountIn, reserveInDecimals),
-        _calcUsdValue(reserveOut, amountOut, reserveOutDecimals),
-        path
-      );
   }
 
   /**
