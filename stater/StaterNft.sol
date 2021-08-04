@@ -1,7 +1,7 @@
 //SPDX-License-Identifier: agpl-3.0
 pragma solidity =0.6.12;
 import "../dependencies/openzeppelin/contracts/token/ERC721/ERC721.sol";
-import "./uniswap-v3/core/libraries/Position.sol";
+import "../dependencies/uniswap-v3/core/libraries/Position.sol";
 import {INonfungiblePositionManager} from '../dependencies/uniswap-v3/periphery/interfaces/INonfungiblePositionManager.sol';
 
 contract StaterNft is ERC721 {
@@ -20,9 +20,10 @@ contract StaterNft is ERC721 {
     using Position for mapping(uint256 => Position.Info);
     using Position for Position.Info;
     mapping(uint256 => Position.Info) positions;
+    mapping(uint256 => bool) positionsExistence;
 
     function totalSupply(uint256 positionId) external view returns(uint128) {
-        returns positions[positionId].liquidity; // to implement the right logic later, right now for tests purpose only
+        return positions[positionId].liquidity; // to implement the right logic later, right now for tests purpose only
     }
 
     // @DIIMIIM: Will return the child token id
@@ -41,6 +42,15 @@ contract StaterNft is ERC721 {
     // 1) A real mint, where a deposit is created for the first time
     // 2) A deposit, where the nft will be updated
     function mint(uint256 positionIds) external returns(uint256) {
+        
+        // To be adapted to array
+        if (positionsExistence[positionIds]) {
+            // Perform update
+        } else {
+            positionsExistence[positionIds] = true;
+            // Perform mint
+        }
+        
         return positionIds;
     }
 

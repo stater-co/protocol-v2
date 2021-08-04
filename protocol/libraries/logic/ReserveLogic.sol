@@ -193,9 +193,9 @@ library ReserveLogic {
 
   /**
    * @dev Updates the reserve current stable borrow rate, the current variable borrow rate and the current liquidity rate
-   * @param reserve The address of the reserve to be updated
-   * @param liquidityAdded The amount of liquidity added to the protocol (deposit or repay) in the previous action
-   * @param liquidityTaken The amount of liquidity taken from the protocol (redeem or borrow)
+   * reserve The address of the reserve to be updated
+   * liquidityAdded The amount of liquidity added to the protocol (deposit or repay) in the previous action
+   * liquidityTaken The amount of liquidity taken from the protocol (redeem or borrow)
    **/
   function updateInterestRates(
     DataTypes.ReserveData storage reserve,
