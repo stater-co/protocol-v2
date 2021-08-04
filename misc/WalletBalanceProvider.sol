@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity 0.6.12;
+pragma solidity >=0.6.12 <=0.8.6;
 
 pragma experimental ABIEncoderV2;
 
-import {Address} from '../dependencies/openzeppelin/contracts/Address.sol';
+import {Address} from '../dependencies/openzeppelin/contracts/utils/Address.sol';
 import {IERC20} from '../dependencies/openzeppelin/contracts/token/ERC20/IERC20.sol';
 
 import {ILendingPoolAddressesProvider} from '../interfaces/ILendingPoolAddressesProvider.sol';

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity 0.6.12;
+pragma solidity >=0.6.12 <=0.8.6;
 
-import {Ownable} from '../dependencies/openzeppelin/contracts/Ownable.sol';
+import {Ownable} from '../dependencies/openzeppelin/contracts/access/Ownable.sol';
 import {IERC20} from '../dependencies/openzeppelin/contracts/token/ERC20/IERC20.sol';
 
 import {IPriceOracleGetter} from '../interfaces/IPriceOracleGetter.sol';

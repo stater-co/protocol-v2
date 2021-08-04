@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity 0.6.12;
+pragma solidity >=0.6.12 <=0.8.6;
 
 import {SafeMath} from '../../../dependencies/openzeppelin/contracts/math/SafeMath.sol';
 import {IERC20} from '../../../dependencies/openzeppelin/contracts/token/ERC20/IERC20.sol';
@@ -14,6 +14,8 @@ import {WadRayMath} from '../math/WadRayMath.sol';
 import {PercentageMath} from '../math/PercentageMath.sol';
 import {Errors} from '../helpers/Errors.sol';
 import {DataTypes} from '../types/DataTypes.sol';
+import {IStaterNft} from '../../../interfaces/IStaterNft.sol';
+
 
 /**
  * @title ReserveLogic library
@@ -107,14 +109,14 @@ library ReserveLogic {
    * @dev Updates the liquidity cumulative index and the variable borrow index.
    * @param reserve the reserve object
    **/
-  function updateState(DataTypes.ReserveData storage reserve) internal {
+  function updateState(DataTypes.ReserveData storage reserve, address nftAddress) internal {
     uint256 scaledVariableDebt =
       IVariableDebtToken(reserve.variableDebtTokenAddress).scaledTotalSupply();
     uint256 previousVariableBorrowIndex = reserve.variableBorrowIndex;
     uint256 previousLiquidityIndex = reserve.liquidityIndex;
     uint40 lastUpdatedTimestamp = reserve.lastUpdateTimestamp;
 
-    (/*uint256 newLiquidityIndex*/ , uint256 newVariableBorrowIndex) =
+    (, uint256 newVariableBorrowIndex) =
       _updateIndexes(
         reserve,
         scaledVariableDebt,
@@ -127,9 +129,9 @@ library ReserveLogic {
       reserve,
       scaledVariableDebt,
       previousVariableBorrowIndex,
-      // newLiquidityIndex,
       newVariableBorrowIndex,
-      lastUpdatedTimestamp
+      lastUpdatedTimestamp,
+      nftAddress
     );
   }
 
@@ -274,7 +276,8 @@ library ReserveLogic {
     uint256 scaledVariableDebt,
     uint256 previousVariableBorrowIndex,
     uint256 newVariableBorrowIndex,
-    uint40 timestamp
+    uint40 timestamp,
+    address nftAddress
   ) internal view {
     MintToTreasuryLocalVars memory vars;
 
@@ -317,6 +320,7 @@ library ReserveLogic {
     vars.amountToMint = vars.totalDebtAccrued.percentMul(vars.reserveFactor);
 
     if (vars.amountToMint != 0) {
+      IStaterNft();
       // @DIIMIIM: nft mint //IAToken(reserve.aTokenAddress).mintToTreasury(vars.amountToMint, newLiquidityIndex);
     }
   }

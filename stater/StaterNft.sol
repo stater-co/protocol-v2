@@ -40,22 +40,8 @@ contract StaterNft is ERC721 {
     // @DIIMIIM: This must handle both cases:
     // 1) A real mint, where a deposit is created for the first time
     // 2) A deposit, where the nft will be updated
-    function mint() external returns(uint256,uint128,uint256,uint256) {
-        returns nonFungiblePositionManager.mint(
-                    INonfungiblePositionManager.MintParams({
-                        token0
-                        token1
-                        fee
-                        tickLower
-                        tickUpper
-                        amount0Desired
-                        amount1Desired
-                        amount0Min
-                        amount1Min
-                        recipient
-                        deadline
-                    })
-                );
+    function mint(uint256 positionIds) external returns(uint256) {
+        return positionIds;
     }
 
     /*

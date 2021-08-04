@@ -10,6 +10,8 @@ import {Address} from '../../dependencies/openzeppelin/contracts/utils/Address.s
 
 import {ILendingPoolAddressesProvider} from '../../interfaces/ILendingPoolAddressesProvider.sol';
 import {IVariableDebtToken} from '../../interfaces/IVariableDebtToken.sol';
+
+/*
 import {IPriceOracleGetter} from '../../interfaces/IPriceOracleGetter.sol';
 import {IStableDebtToken} from '../../interfaces/IStableDebtToken.sol';
 import {ILendingPool} from '../../interfaces/ILendingPool.sol';
@@ -27,6 +29,7 @@ import {DataTypes} from '../libraries/types/DataTypes.sol';
 import {LendingPoolStorage} from './LendingPoolStorage.sol';
 import {LendingPoolStaterConnector} from '../configuration/LendingPoolStaterConnector.sol';
 import {IStaterNft} from '../../interfaces/IStaterNft.sol';
+*/
 
 /**
  * @title LendingPool contract
@@ -106,7 +109,7 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
     uint16 referralCode;
     bool hasCurrency;
     bool hasNft;
-    bool nftId;
+    uint256 nftId;
   }
   function deposit(
     DepositParams memory params
@@ -124,10 +127,7 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
 
     IERC20(asset).safeTransferFrom(msg.sender, STATER_NFT, amount);
 
-    bool isFirstDeposit = staterNft.mint(
-      asset,
-
-    ); // @DIIMIIM: Mint or update the nft //IAToken(aToken).mint(onBehalfOf, amount, reserve.liquidityIndex);
+    bool isFirstDeposit = staterNft.mint(nftId); // @DIIMIIM: Mint or update the nft //IAToken(aToken).mint(onBehalfOf, amount, reserve.liquidityIndex);
 
     if (isFirstDeposit) {
       _usersConfig[onBehalfOf].setUsingAsCollateral(reserve.id, true);
