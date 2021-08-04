@@ -95,7 +95,7 @@ library ValidationLogic {
     uint256 userCollateralBalanceETH;
     uint256 userBorrowBalanceETH;
     uint256 availableLiquidity;
-    uint256 healthFactor;
+    int256 healthFactor;
     bool isActive;
     bool isFrozen;
     bool borrowingEnabled;
@@ -104,7 +104,7 @@ library ValidationLogic {
 
   /**
    * @dev Validates a borrow action
-   * @param asset The address of the asset to borrow
+   * asset The address of the asset to borrow
    * @param reserve The reserve state from which the user is borrowing
    * @param userAddress The address of the user
    * @param amount The amount to be borrowed
@@ -118,7 +118,7 @@ library ValidationLogic {
    */
 
   function validateBorrow(
-    address asset,
+    //address asset,
     DataTypes.ReserveData storage reserve,
     address userAddress,
     uint256 amount,
@@ -222,7 +222,7 @@ library ValidationLogic {
    */
   function validateRepay(
     DataTypes.ReserveData storage reserve,
-    uint256 amountSent,
+    int256 amountSent,
     DataTypes.InterestRateMode rateMode,
     address onBehalfOf,
     uint256 stableDebt,
@@ -243,7 +243,7 @@ library ValidationLogic {
     );
 
     require(
-      amountSent != uint256(-1) || msg.sender == onBehalfOf,
+      amountSent != int256(-1) || msg.sender == onBehalfOf,
       Errors.VL_NO_EXPLICIT_AMOUNT_TO_REPAY_ON_BEHALF
     );
   }
@@ -295,14 +295,14 @@ library ValidationLogic {
   /**
    * @dev Validates a stable borrow rate rebalance action
    * @param reserve The reserve state on which the user is getting rebalanced
-   * @param reserveAddress The address of the reserve
+   * reserveAddress The address of the reserve
    * @param stableDebtToken The stable debt token instance
    * @param variableDebtToken The variable debt token instance
    * aTokenAddress The address of the aToken contract
    */
   function validateRebalanceStableBorrowRate(
     DataTypes.ReserveData storage reserve,
-    address reserveAddress,
+    //address reserveAddress,
     IERC20 stableDebtToken,
     IERC20 variableDebtToken //,
     //address aTokenAddress
@@ -334,7 +334,7 @@ library ValidationLogic {
 
   /**
    * @dev Validates the action of setting an asset as collateral
-   * @param reserve The state of the reserve that the user is enabling or disabling as collateral
+   * reserve The state of the reserve that the user is enabling or disabling as collateral
    * @param reserveAddress The address of the reserve
    * @param reservesData The data of all the reserves
    * @param userConfig The state of the user for the specific reserve
@@ -342,7 +342,7 @@ library ValidationLogic {
    * @param oracle The price oracle
    */
   function validateSetUseReserveAsCollateral(
-    DataTypes.ReserveData storage reserve,
+    //DataTypes.ReserveData storage reserve,
     address reserveAddress,
     bool useAsCollateral,
     mapping(address => DataTypes.ReserveData) storage reservesData,
@@ -384,7 +384,7 @@ library ValidationLogic {
     DataTypes.ReserveData storage collateralReserve,
     DataTypes.ReserveData storage principalReserve,
     DataTypes.UserConfigurationMap storage userConfig,
-    uint256 userHealthFactor,
+    int256 userHealthFactor,
     uint256 userStableDebt,
     uint256 userVariableDebt
   ) internal view returns (uint256, string memory) {
@@ -442,7 +442,7 @@ library ValidationLogic {
     uint256 reservesCount,
     address oracle
   ) internal view {
-    (, , , , uint256 healthFactor) =
+    (, , , , int256 healthFactor) =
       GenericLogic.calculateUserAccountData(
         from,
         reservesData,

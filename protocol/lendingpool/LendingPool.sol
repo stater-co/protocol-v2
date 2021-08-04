@@ -6,12 +6,8 @@ import {SafeMath} from '../../dependencies/openzeppelin/contracts/math/SafeMath.
 import {IERC20} from '../../dependencies/openzeppelin/contracts/token/ERC20/IERC20.sol';
 import {SafeERC20} from '../../dependencies/openzeppelin/contracts/token/ERC20/SafeERC20.sol';
 import {Address} from '../../dependencies/openzeppelin/contracts/utils/Address.sol';
-
-
 import {ILendingPoolAddressesProvider} from '../../interfaces/ILendingPoolAddressesProvider.sol';
 import {IVariableDebtToken} from '../../interfaces/IVariableDebtToken.sol';
-
-/*
 import {IPriceOracleGetter} from '../../interfaces/IPriceOracleGetter.sol';
 import {IStableDebtToken} from '../../interfaces/IStableDebtToken.sol';
 import {ILendingPool} from '../../interfaces/ILendingPool.sol';
@@ -27,9 +23,10 @@ import {ReserveConfiguration} from '../libraries/configuration/ReserveConfigurat
 import {UserConfiguration} from '../libraries/configuration/UserConfiguration.sol';
 import {DataTypes} from '../libraries/types/DataTypes.sol';
 import {LendingPoolStorage} from './LendingPoolStorage.sol';
-import {LendingPoolStaterConnector} from '../configuration/LendingPoolStaterConnector.sol';
-import {IStaterNft} from '../../interfaces/IStaterNft.sol';
-*/
+//import {LendingPoolStaterConnector} from '../configuration/LendingPoolStaterConnector.sol';
+//import {IStaterNft} from '../../interfaces/IStaterNft.sol';
+
+
 
 /**
  * @title LendingPool contract
@@ -47,27 +44,34 @@ import {IStaterNft} from '../../interfaces/IStaterNft.sol';
  *   LendingPoolAddressesProvider
  * @author Aave
  **/
-contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage, LendingPoolStaterConnector {
+contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage /*, LendingPoolStaterConnector */  {
+
   using SafeMath for uint256;
   using WadRayMath for uint256;
   using PercentageMath for uint256;
   using SafeERC20 for IERC20;
 
+
+  
   uint256 public constant LENDINGPOOL_REVISION = 0x2;
 
   modifier whenNotPaused() {
     _whenNotPaused();
     _;
   }
+  
+  
 
   modifier onlyLendingPoolConfigurator() {
     _onlyLendingPoolConfigurator();
     _;
   }
 
+
   function _whenNotPaused() internal view {
     require(!_paused, Errors.LP_IS_PAUSED);
   }
+
 
   function _onlyLendingPoolConfigurator() internal view {
     require(
@@ -80,6 +84,7 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
     return LENDINGPOOL_REVISION;
   }
 
+
   /**
    * @dev Function is invoked by the proxy contract when the LendingPool contract is added to the
    * LendingPoolAddressesProvider of the market.
@@ -90,6 +95,7 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
   function initialize(ILendingPoolAddressesProvider provider) public initializer {
     _addressesProvider = provider;
   }
+
 
   /**
    * @dev Deposits an `amount` of underlying asset into the reserve, receiving in return overlying aTokens.
@@ -116,8 +122,9 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
   ) external override whenNotPaused {
     DataTypes.ReserveData storage reserve = _reserves[params.asset];
 
+    /*
     if (params.hasNft) {
-      params.amount = staterNft.balanceOf(nftId);
+      params.amount = staterNft.balanceOf(onBehalfOf,nftId);
     }
 
     ValidationLogic.validateDeposit(reserve, params.amount);
@@ -135,7 +142,10 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
     }
 
     emit Deposit(asset, msg.sender, onBehalfOf, amount, referralCode);
+    */
+    
   }
+
 
   /**
    * @dev Withdraws an `amount` of underlying asset from the reserve, burning the equivalent aTokens owned
@@ -207,6 +217,7 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
    * calling the function if he wants to borrow against his own collateral, or the address of the credit delegator
    * if he has been given credit delegation allowance
    **/
+
   function borrow(
     address asset,
     uint256 amount,
@@ -230,6 +241,7 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
     );
   }
 
+
   /**
    * @notice Repays a borrowed `amount` on a specific reserve, burning the equivalent debt tokens owned
    * - E.g. User repays 100 USDC, burning 100 variable/stable debt tokens of the `onBehalfOf` address
@@ -242,6 +254,7 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
    * other borrower whose debt should be removed
    * @return The final amount repaid
    **/
+
   function repay(
     address asset,
     uint256 amount,
@@ -297,12 +310,14 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
 
     return paybackAmount;
   }
+  
 
   /**
    * @dev Allows a borrower to swap his debt between stable and variable mode, or viceversa
    * @param asset The address of the underlying asset borrowed
    * @param rateMode The rate mode that the user wants to swap to
    **/
+
   function swapBorrowRateMode(address asset, uint256 rateMode) external override whenNotPaused {
     DataTypes.ReserveData storage reserve = _reserves[asset];
 
@@ -342,10 +357,11 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
       );
     }
 
-    reserve.updateInterestRates(asset, address(0) /* @DIIMIIM: nft address here reserve.aTokenAddress*/ , 0, 0);
+    reserve.updateInterestRates(asset, address(0) /* @DIIMIIM: nft address here reserve.aTokenAddress*/, 0, 0);
 
     emit Swap(asset, msg.sender, rateMode);
   }
+
 
   /**
    * @dev Rebalances the stable interest rate of a user to the current stable rate defined on the reserve.
@@ -356,6 +372,7 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
    * @param asset The address of the underlying asset borrowed
    * @param user The address of the user to be rebalanced
    **/
+
   function rebalanceStableBorrowRate(address asset, address user) external override whenNotPaused {
     DataTypes.ReserveData storage reserve = _reserves[asset];
 
@@ -388,11 +405,13 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
     emit RebalanceStableBorrowRate(asset, user);
   }
 
+
   /**
    * @dev Allows depositors to enable/disable a specific deposited asset as collateral
    * @param asset The address of the underlying asset deposited
    * @param useAsCollateral `true` if the user wants to use the deposit as collateral, `false` otherwise
    **/
+
   function setUserUseReserveAsCollateral(address asset, bool useAsCollateral)
     external
     override
@@ -420,6 +439,7 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
     }
   }
 
+
   /**
    * @dev Function to liquidate a non-healthy position collateral-wise, with Health Factor below 1
    * - The caller (liquidator) covers `debtToCover` amount of debt of the user getting liquidated, and receives
@@ -431,6 +451,7 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
    * @param receiveAToken `true` if the liquidators wants to receive the collateral aTokens, `false` if he wants
    * to receive the underlying collateral asset directly
    **/
+
   function liquidationCall(
     address collateralAsset,
     address debtAsset,
@@ -441,9 +462,7 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
     address collateralManager = _addressesProvider.getLendingPoolCollateralManager();
 
     //solium-disable-next-line
-    /*
-     * @DIIMIIM: Here, in case of receiveAToken I suppose we need to transfer a part of the nft to the user who calls the liquidationCall
-     */
+    // @DIIMIIM: Here, in case of receiveAToken I suppose we need to transfer a part of the nft to the user who calls the liquidationCall
     (bool success, bytes memory result) =
       collateralManager.delegatecall(
         abi.encodeWithSignature(
@@ -463,11 +482,13 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
     require(returnCode == 0, string(abi.encodePacked(returnMessage)));
   }
 
+
   /**
    * @dev Returns the state and configuration of the reserve
    * @param asset The address of the underlying asset of the reserve
    * @return The state of the reserve
    **/
+
   function getReserveData(address asset)
     external
     view
@@ -476,6 +497,7 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
   {
     return _reserves[asset];
   }
+
 
   /**
    * @dev Returns the user account data across all the reserves
@@ -487,6 +509,7 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
    * @return ltv the loan to value of the user
    * @return healthFactor the current health factor of the user
    **/
+
   function getUserAccountData(address user)
     external
     view
@@ -522,11 +545,13 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
     );
   }
 
+
   /**
    * @dev Returns the configuration of the reserve
    * @param asset The address of the underlying asset of the reserve
    * @return The configuration of the reserve
    **/
+
   function getConfiguration(address asset)
     external
     view
@@ -536,11 +561,13 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
     return _reserves[asset].configuration;
   }
 
+
   /**
    * @dev Returns the configuration of the user across all the reserves
    * @param user The user address
    * @return The configuration of the user
    **/
+
   function getUserConfiguration(address user)
     external
     view
@@ -550,11 +577,13 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
     return _usersConfig[user];
   }
 
+
   /**
    * @dev Returns the normalized income per unit of asset
    * @param asset The address of the underlying asset of the reserve
    * @return The reserve's normalized income
    */
+
   function getReserveNormalizedIncome(address asset)
     external
     view
@@ -565,11 +594,13 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
     return _reserves[asset].getNormalizedIncome();
   }
 
+
   /**
    * @dev Returns the normalized variable debt per unit of asset
    * @param asset The address of the underlying asset of the reserve
    * @return The reserve normalized variable debt
    */
+
   function getReserveNormalizedVariableDebt(address asset)
     external
     view
@@ -579,16 +610,21 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
     return _reserves[asset].getNormalizedDebt();
   }
 
+
   /**
    * @dev Returns if the LendingPool is paused
    */
+   
+
   function paused() external view override returns (bool) {
     return _paused;
   }
 
+
   /**
    * @dev Returns the list of the initialized reserves
    **/
+
   function getReservesList() external view override returns (address[] memory) {
     address[] memory _activeReserves = new address[](_reservesCount);
 
@@ -598,12 +634,15 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
     return _activeReserves;
   }
 
+
   /**
    * @dev Returns the cached LendingPoolAddressesProvider connected to this contract
    **/
+
   function getAddressesProvider() external view override returns (ILendingPoolAddressesProvider) {
     return _addressesProvider;
   }
+
 
   /**
    * @dev Validates and finalizes an aToken transfer
@@ -615,6 +654,7 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
    * @param balanceFromBefore The aToken balance of the `from` user before the transfer
    * @param balanceToBefore The aToken balance of the `to` user before the transfer
    */
+
   function finalizeTransfer(
     address asset,
     address from,
@@ -623,7 +663,7 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
     uint256 balanceFromBefore,
     uint256 balanceToBefore
   ) external override whenNotPaused {
-    require(msg.sender == address(0) /* @DIIMIIM : nft address will be used here _reserves[asset].aTokenAddress */, Errors.LP_CALLER_MUST_BE_AN_ATOKEN);
+    require(msg.sender == address(0) /* @DIIMIIM : nft address will be used here _reserves[asset].aTokenAddress*/, Errors.LP_CALLER_MUST_BE_AN_ATOKEN);
 
     ValidationLogic.validateTransfer(
       from,
@@ -651,6 +691,7 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
     }
   }
 
+
   /**
    * @dev Initializes a reserve, activating it, assigning an aToken and debt tokens and an
    * interest rate strategy
@@ -661,6 +702,7 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
    * aTokenAddress The address of the VariableDebtToken that will be assigned to the reserve
    * @param interestRateStrategyAddress The address of the interest rate strategy contract
    **/
+
   function initReserve(
     address asset,
     //address aTokenAddress,
@@ -679,12 +721,14 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
     _addReserveToList(asset);
   }
 
+
   /**
    * @dev Updates the address of the interest rate strategy contract
    * - Only callable by the LendingPoolConfigurator contract
    * @param asset The address of the underlying asset of the reserve
    * @param rateStrategyAddress The address of the interest rate strategy contract
    **/
+
   function setReserveInterestRateStrategyAddress(address asset, address rateStrategyAddress)
     external
     override
@@ -693,12 +737,14 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
     _reserves[asset].interestRateStrategyAddress = rateStrategyAddress;
   }
 
+
   /**
    * @dev Sets the configuration bitmap of the reserve as a whole
    * - Only callable by the LendingPoolConfigurator contract
    * @param asset The address of the underlying asset of the reserve
    * @param configuration The new configuration bitmap
    **/
+
   function setConfiguration(address asset, uint256 configuration)
     external
     override
@@ -707,11 +753,13 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
     _reserves[asset].configuration.data = configuration;
   }
 
+
   /**
    * @dev Set the _pause state of a reserve
    * - Only callable by the LendingPoolConfigurator contract
    * @param val `true` to pause the reserve, `false` to un-pause it
    */
+
   function setPause(bool val) external override onlyLendingPoolConfigurator {
     _paused = val;
     if (_paused) {
@@ -720,6 +768,8 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
       emit Unpaused();
     }
   }
+
+
 
   struct ExecuteBorrowParams {
     address asset;
@@ -731,6 +781,8 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
     uint16 referralCode;
     bool releaseUnderlying;
   }
+
+
 
   function _executeBorrow(ExecuteBorrowParams memory vars) internal {
     DataTypes.ReserveData storage reserve = _reserves[vars.asset];
@@ -750,7 +802,7 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
       vars.amount,
       amountInETH,
       vars.interestRateMode,
-      maxStableRateBorrowSizePercent,
+      _maxStableRateBorrowSizePercent,
       _reserves,
       userConfig,
       _reservesList,
@@ -810,10 +862,12 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
     );
   }
 
+
+
   function _addReserveToList(address asset) internal {
     uint256 reservesCount = _reservesCount;
 
-    require(reservesCount < maxNumberOfReserves, Errors.LP_NO_MORE_RESERVES_ALLOWED);
+    require(reservesCount < _maxNumberOfReserves, Errors.LP_NO_MORE_RESERVES_ALLOWED);
 
     bool reserveAlreadyAdded = _reserves[asset].id != 0 || _reservesList[0] == asset;
 
@@ -824,4 +878,6 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
       _reservesCount = reservesCount + 1;
     }
   }
+
+  
 }

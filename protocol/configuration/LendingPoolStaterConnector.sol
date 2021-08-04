@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity >=0.6.12 <=0.8.6;
+import {IStaterNft} from '../../interfaces/IStaterNft.sol';
 import {Ownable} from '../../dependencies/openzeppelin/contracts/access/Ownable.sol';
 
 contract LendingPoolStaterConnector is Ownable {

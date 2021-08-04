@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity 0.6.12;
+pragma solidity >=0.6.12 <=0.8.6;
 pragma experimental ABIEncoderV2;
 
 import {SafeMath} from '../../../dependencies/openzeppelin/contracts/math/SafeMath.sol';
@@ -25,7 +25,7 @@ library GenericLogic {
   using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
   using UserConfiguration for DataTypes.UserConfigurationMap;
 
-  uint256 public constant HEALTH_FACTOR_LIQUIDATION_THRESHOLD = 1 ether;
+  int256 public constant HEALTH_FACTOR_LIQUIDATION_THRESHOLD = 1 ether;
 
   struct balanceDecreaseAllowedLocalVars {
     uint256 decimals;
@@ -105,7 +105,7 @@ library GenericLogic {
       .sub(vars.amountToDecreaseInETH.mul(vars.liquidationThreshold))
       .div(vars.collateralBalanceAfterDecrease);
 
-    uint256 healthFactorAfterDecrease =
+    int256 healthFactorAfterDecrease =
       calculateHealthFactorFromBalances(
         vars.collateralBalanceAfterDecrease,
         vars.totalDebtInETH,
@@ -124,7 +124,7 @@ library GenericLogic {
     uint256 ltv;
     uint256 liquidationThreshold;
     uint256 i;
-    uint256 healthFactor;
+    int256 healthFactor;
     uint256 totalCollateralInETH;
     uint256 totalDebtInETH;
     uint256 avgLtv;
@@ -162,13 +162,13 @@ library GenericLogic {
       uint256,
       uint256,
       uint256,
-      uint256
+      int256
     )
   {
     CalculateUserAccountDataVars memory vars;
 
     if (userConfig.isEmpty()) {
-      return (0, 0, 0, 0, uint256(-1));
+      return (0, 0, 0, 0, -1);
     }
     for (vars.i = 0; vars.i < reservesCount; vars.i++) {
       if (!userConfig.isUsingAsCollateralOrBorrowing(vars.i)) {
@@ -228,7 +228,7 @@ library GenericLogic {
       vars.totalDebtInETH,
       vars.avgLtv,
       vars.avgLiquidationThreshold,
-      vars.healthFactor
+      int256(vars.healthFactor)
     );
   }
 
@@ -243,10 +243,10 @@ library GenericLogic {
     uint256 totalCollateralInETH,
     uint256 totalDebtInETH,
     uint256 liquidationThreshold
-  ) internal pure returns (uint256) {
-    if (totalDebtInETH == 0) return uint256(-1);
+  ) internal pure returns (int256) {
+    if (totalDebtInETH == 0) return int256(-1);
 
-    return (totalCollateralInETH.percentMul(liquidationThreshold)).wadDiv(totalDebtInETH);
+    return int256((totalCollateralInETH.percentMul(liquidationThreshold)).wadDiv(totalDebtInETH));
   }
 
   /**
