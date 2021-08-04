@@ -1,8 +1,8 @@
 //SPDX-License-Identifier: agpl-3.0
-pragma solidity =0.6.12;
-import "../dependencies/openzeppelin/contracts/token/ERC721/ERC721.sol";
-import "../dependencies/uniswap-v3/core/libraries/Position.sol";
-import {INonfungiblePositionManager} from '../dependencies/uniswap-v3/periphery/interfaces/INonfungiblePositionManager.sol';
+pragma solidity >=0.6.12 <=0.8.6;
+import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+import "@uniswap/v3-core/contracts/libraries/Position.sol";
+import "@uniswap/v3-periphery/contracts/interfaces/INonfungiblePositionManager.sol";
 
 contract StaterNft is ERC721 {
 
