@@ -113,7 +113,7 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
   ) external override whenNotPaused {
     DataTypes.ReserveData storage reserve = _reserves[params.asset];
 
-    if (hasNft) {
+    if (params.hasNft) {
       params.amount = staterNft.balanceOf(nftId);
     }
 
