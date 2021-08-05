@@ -1,19 +1,21 @@
 //SPDX-License-Identifier: agpl-3.0
-pragma solidity >=0.6.12 <=0.8.6;
-import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
-import "@uniswap/v3-core/contracts/libraries/Position.sol";
-import "@uniswap/v3-periphery/contracts/interfaces/INonfungiblePositionManager.sol";
+pragma solidity 0.7.6;
+import "./ERC721/ERC721.sol";
+import "./Position.sol";
+//import "./INonfungiblePositionManager.sol";
+
+
 
 contract StaterNft is ERC721 {
 
-    INonfungiblePositionManager public nonFungiblePositionManager;
+    //INonfungiblePositionManager public nonFungiblePositionManager;
 
     constructor(
         string memory name,
         string memory symbol,
         address uniswapV3NftPositionManagerAddress
-    ) ERC721(name, symbol) public {
-        nonFungiblePositionManager = INonfungiblePositionManager(uniswapV3NftPositionManagerAddress);
+    ) ERC721(name, symbol) {
+        //nonFungiblePositionManager = INonfungiblePositionManager(uniswapV3NftPositionManagerAddress);
     }
 
     uint256 public id;
@@ -27,15 +29,15 @@ contract StaterNft is ERC721 {
     }
 
     // @DIIMIIM: Will return the child token id
-    function splitNft(uint256 parentPositionId, uint128 toSplit) external returns(uint256) {
+    function splitNft(uint256 parentPositionId, uint128 toSplit) external pure returns(uint256) {
         
         // @DIIMIIM: To be discussed with Raziel
-        return parentPositionId;
+        return parentPositionId / toSplit;
     }
 
-    function balanceOf(uint256 positionId) external view returns(uint128) {
-        (,,,,,,,uint128 balance,,,,) = nonFungiblePositionManager.positions(positionId);
-        return balance;
+    function balanceOf(uint256 positionId) external pure returns(uint128) {
+        //(,,,,,,,uint128 balance,,,,) = nonFungiblePositionManager.positions(positionId);
+        return uint128(positionId);
     }
 
     // @DIIMIIM: This must handle both cases:
