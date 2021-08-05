@@ -2,11 +2,11 @@
 pragma solidity 0.7.6;
 pragma abicoder v2;
 
-import './IERC721Metadata.sol';
-import './IERC721Enumerable.sol';
+import './ERC721/extensions/IERC721Metadata.sol';
+import './ERC721/extensions/IERC721Enumerable.sol';
 
 import './IPoolInitializer.sol';
-import './IERC721Permit.sol';
+import './ERC721/extensions/IERC721Permit.sol';
 import './IPeripheryPayments.sol';
 import './IPeripheryImmutableState.sol';
 import './PoolAddress.sol';
