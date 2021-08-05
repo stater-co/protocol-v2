@@ -1,7 +1,7 @@
 //SPDX-License-Identifier: agpl-3.0
 pragma solidity 0.7.6;
 import "./ERC721/ERC721.sol";
-import "./Position.sol";
+import "./Uniswap/Position/Position.sol";
 import "./INonfungiblePositionManager.sol";
 
 
