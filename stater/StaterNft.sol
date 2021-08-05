@@ -8,14 +8,14 @@ import "./INonfungiblePositionManager.sol";
 
 contract StaterNft is ERC721 {
 
-    //INonfungiblePositionManager public nonFungiblePositionManager;
+    INonfungiblePositionManager public nonFungiblePositionManager;
 
     constructor(
         string memory name,
         string memory symbol,
         address uniswapV3NftPositionManagerAddress
     ) ERC721(name, symbol) {
-        //nonFungiblePositionManager = INonfungiblePositionManager(uniswapV3NftPositionManagerAddress);
+        nonFungiblePositionManager = INonfungiblePositionManager(uniswapV3NftPositionManagerAddress);
     }
 
     uint256 public id;
@@ -35,9 +35,9 @@ contract StaterNft is ERC721 {
         return parentPositionId / toSplit;
     }
 
-    function balanceOf(uint256 positionId) external pure returns(uint128) {
-        //(,,,,,,,uint128 balance,,,,) = nonFungiblePositionManager.positions(positionId);
-        return uint128(positionId);
+    function balanceOf(uint256 positionId) external view returns(uint128) {
+        (,,,,,,,uint128 balance,,,,) = nonFungiblePositionManager.positions(positionId);
+        return balance;
     }
 
     // @DIIMIIM: This must handle both cases:
