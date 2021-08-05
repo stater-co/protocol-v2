@@ -1,12 +1,12 @@
 //SPDX-License-Identifier: agpl-3.0
 pragma solidity 0.7.6;
-import "./ERC721/ERC721.sol";
-import "./Position.sol";
-import "./INonfungiblePositionManager.sol";
+//import "./ERC721/ERC721.sol";
+import "./Uniswap/Position/Position.sol";
+import "./Uniswap/NonfungiblePositionManager/INonfungiblePositionManager.sol";
 
 
 
-contract StaterNft is ERC721 {
+contract StaterNft /* is ERC721 */ {
 
     INonfungiblePositionManager public nonFungiblePositionManager;
 
@@ -14,7 +14,7 @@ contract StaterNft is ERC721 {
         string memory name,
         string memory symbol,
         address uniswapV3NftPositionManagerAddress
-    ) ERC721(name, symbol) {
+    ) /* ERC721(name, symbol) */ {
         nonFungiblePositionManager = INonfungiblePositionManager(uniswapV3NftPositionManagerAddress);
     }
 

@@ -2,19 +2,20 @@
 pragma solidity 0.7.6;
 pragma abicoder v2;
 
-import './ERC721/extensions/IERC721Metadata.sol';
-import './ERC721/extensions/IERC721Enumerable.sol';
 
+import './IERC721Metadata.sol';
+import './IERC721Enumerable.sol';
+import './IERC721Permit.sol';
 import './IPoolInitializer.sol';
-import './ERC721/extensions/IERC721Permit.sol';
 import './IPeripheryPayments.sol';
 import './IPeripheryImmutableState.sol';
 import './PoolAddress.sol';
 
+
 /// @title Non-fungible token for positions
 /// @notice Wraps Uniswap V3 positions in a non-fungible token interface which allows for them to be transferred
 /// and authorized.
-interface INonfungiblePositionManager is
+interface INonfungiblePositionManager is 
     IPoolInitializer,
     IPeripheryPayments,
     IPeripheryImmutableState,
