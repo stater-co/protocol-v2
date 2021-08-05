@@ -4,7 +4,7 @@ pragma solidity 0.6.12;
 import {Context} from '../../dependencies/openzeppelin/contracts/Context.sol';
 import {IERC20} from '../../dependencies/openzeppelin/contracts/token/ERC20/IERC20.sol';
 import {IERC20Detailed} from '../../dependencies/openzeppelin/contracts/IERC20Detailed.sol';
-import {SafeMath} from '../../dependencies/openzeppelin/contracts/math/SafeMath.sol';
+import {SafeMath} from '../../dependencies/openzeppelin/contracts/utils/math/SafeMath.sol';
 import {IAaveIncentivesController} from '../../interfaces/IAaveIncentivesController.sol';
 
 /**

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity >=0.6.12 <=0.8.6;
 
-import {SafeMath} from '../../dependencies/openzeppelin/contracts/math/SafeMath.sol';
+import {SafeMath} from '../../dependencies/openzeppelin/contracts/utils/math/SafeMath.sol';
 import {IERC20} from '../../dependencies/openzeppelin/contracts/token/ERC20/IERC20.sol';
 //import {IAToken} from '../../interfaces/IAToken.sol';
 import {IStableDebtToken} from '../../interfaces/IStableDebtToken.sol';
@@ -13,7 +13,7 @@ import {GenericLogic} from '../libraries/logic/GenericLogic.sol';
 import {Helpers} from '../libraries/helpers/Helpers.sol';
 import {WadRayMath} from '../libraries/math/WadRayMath.sol';
 import {PercentageMath} from '../libraries/math/PercentageMath.sol';
-import {SafeERC20} from '../../dependencies/openzeppelin/contracts/token/ERC20/SafeERC20.sol';
+import {SafeERC20} from '../../dependencies/openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
 import {Errors} from '../libraries/helpers/Errors.sol';
 import {ValidationLogic} from '../libraries/logic/ValidationLogic.sol';
 import {DataTypes} from '../libraries/types/DataTypes.sol';

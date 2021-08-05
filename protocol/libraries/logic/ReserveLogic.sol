@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity >=0.6.12 <=0.8.6;
 
-import {SafeMath} from '../../../dependencies/openzeppelin/contracts/math/SafeMath.sol';
+import {SafeMath} from '../../../dependencies/openzeppelin/contracts/utils/math/SafeMath.sol';
 import {IERC20} from '../../../dependencies/openzeppelin/contracts/token/ERC20/IERC20.sol';
-import {SafeERC20} from '../../../dependencies/openzeppelin/contracts/token/ERC20/SafeERC20.sol';
+import {SafeERC20} from '../../../dependencies/openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
 //import {IAToken} from '../../../interfaces/IAToken.sol';
 import {IStableDebtToken} from '../../../interfaces/IStableDebtToken.sol';
 import {IVariableDebtToken} from '../../../interfaces/IVariableDebtToken.sol';

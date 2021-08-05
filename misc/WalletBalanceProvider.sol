@@ -8,7 +8,7 @@ import {IERC20} from '../dependencies/openzeppelin/contracts/token/ERC20/IERC20.
 
 import {ILendingPoolAddressesProvider} from '../interfaces/ILendingPoolAddressesProvider.sol';
 import {ILendingPool} from '../interfaces/ILendingPool.sol';
-import {SafeERC20} from '../dependencies/openzeppelin/contracts/token/ERC20/SafeERC20.sol';
+import {SafeERC20} from '../dependencies/openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
 import {ReserveConfiguration} from '../protocol/libraries/configuration/ReserveConfiguration.sol';
 import {DataTypes} from '../protocol/libraries/types/DataTypes.sol';
 

@@ -6,7 +6,7 @@ import {IERC20} from '../dependencies/openzeppelin/contracts/token/ERC20/IERC20.
 
 import {IPriceOracleGetter} from '../interfaces/IPriceOracleGetter.sol';
 import {IChainlinkAggregator} from '../interfaces/IChainlinkAggregator.sol';
-import {SafeERC20} from '../dependencies/openzeppelin/contracts/token/ERC20/SafeERC20.sol';
+import {SafeERC20} from '../dependencies/openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
 
 /// @title AaveOracle
 /// @author Aave

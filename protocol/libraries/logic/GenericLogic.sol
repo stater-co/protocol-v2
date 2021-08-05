@@ -2,7 +2,7 @@
 pragma solidity >=0.6.12 <=0.8.6;
 pragma experimental ABIEncoderV2;
 
-import {SafeMath} from '../../../dependencies/openzeppelin/contracts/math/SafeMath.sol';
+import {SafeMath} from '../../../dependencies/openzeppelin/contracts/utils/math/SafeMath.sol';
 import {IERC20} from '../../../dependencies/openzeppelin/contracts/token/ERC20/IERC20.sol';
 import {ReserveLogic} from './ReserveLogic.sol';
 import {ReserveConfiguration} from '../configuration/ReserveConfiguration.sol';

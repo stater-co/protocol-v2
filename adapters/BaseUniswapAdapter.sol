@@ -3,10 +3,10 @@ pragma solidity >=0.6.12 <=0.8.6;
 pragma experimental ABIEncoderV2;
 
 import {PercentageMath} from '../protocol/libraries/math/PercentageMath.sol';
-import {SafeMath} from '../dependencies/openzeppelin/contracts/math/SafeMath.sol';
+import {SafeMath} from '../dependencies/openzeppelin/contracts/utils/math/SafeMath.sol';
 import {IERC20} from '../dependencies/openzeppelin/contracts/token/ERC20/IERC20.sol';
 import {IERC20Detailed} from '../dependencies/openzeppelin/contracts/token/ERC20/IERC20Detailed.sol';
-import {SafeERC20} from '../dependencies/openzeppelin/contracts/token/ERC20/SafeERC20.sol';
+import {SafeERC20} from '../dependencies/openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
 import {Ownable} from '../dependencies/openzeppelin/contracts/access/Ownable.sol';
 import {ILendingPoolAddressesProvider} from '../interfaces/ILendingPoolAddressesProvider.sol';
 import {DataTypes} from '../protocol/libraries/types/DataTypes.sol';
