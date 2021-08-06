@@ -7,8 +7,14 @@ import "./INonfungiblePositionManager.sol";
 
 
 contract StaterNft is ERC721 {
-
+    using Position for Position.Info;
     INonfungiblePositionManager public nonFungiblePositionManager;
+
+    struct position {
+        Position.Info[] parents;
+        address owner;
+        uint256 id;
+    }
 
     constructor(
         string memory name,
@@ -18,14 +24,19 @@ contract StaterNft is ERC721 {
         nonFungiblePositionManager = INonfungiblePositionManager(uniswapV3NftPositionManagerAddress);
     }
 
-    uint256 public id;
-    using Position for mapping(uint256 => Position.Info);
-    using Position for Position.Info;
-    mapping(uint256 => Position.Info) positions;
-    mapping(uint256 => bool) positionsExistence;
+    // In this case it might be good to keep the 0 id unused considering the previous smart contracts development
+    uint256 public id = 1;
+    mapping(uint256 => position) positions;
+    
+    // Uniswap position id => stater position id
+    mapping(uint256 => uint256) positionsExistence;
 
-    function totalSupply(uint256 positionId) external view returns(uint128) {
-        return positions[positionId].liquidity; // to implement the right logic later, right now for tests purpose only
+    function totalSupply(uint256 positionId) external view returns(uint256) {
+        uint256 theTotalSupply;
+        for ( uint256 i = 0; i < positions[positionId].parents.length; ++i ) {
+            theTotalSupply += positions[positionId].parents[i].liquidity;
+        }
+        return theTotalSupply;
     }
 
     // @DIIMIIM: Will return the child token id
@@ -43,16 +54,45 @@ contract StaterNft is ERC721 {
     // @DIIMIIM: This must handle both cases:
     // 1) A real mint, where a deposit is created for the first time
     // 2) A deposit, where the nft will be updated
-    function mint(uint256 positionIds) external returns(uint256,bool) {
-        
-        // To be adapted to array
-        if (positionsExistence[positionIds]) {
-            // Perform update
-        } else {
-            positionsExistence[positionIds] = true;
-            // Perform mint
+    function mint(uint256[] calldata positionIds, address onBehalfOf) external returns(uint256,bool) {
+        bool isMinted = true;
+    
+        for ( uint256 i = 0; i < positionIds.length; ++i ) {
+            
+            // Constructing the uniswap position
+            Position.Info memory thePosition;
+            (
+                ,
+                ,
+                ,
+                ,
+                ,
+                ,
+                ,
+                thePosition.liquidity,
+                thePosition.feeGrowthInside0LastX128,
+                thePosition.feeGrowthInside1LastX128,
+                thePosition.tokensOwed0,
+                thePosition.tokensOwed1
+            ) = nonFungiblePositionManager.positions(positionIds[i]);
+            
+            
+            // If position already exists in our smart contract state, we check its owner so we can update it after
+            // Otherwise we mint it and also set the owner
+            if (positionsExistence[positionIds[i]] > 0) {
+                require(positions[positionsExistence[positionIds[i]]].owner == onBehalfOf);
+                isMinted = false;
+                for ( uint j = 0; j < positions[positionsExistence[positionIds[i]]].parents.length; ++j )
+                    if (positions[positionsExistence[positionIds[i]]].parents[j].)
+                // positions
+                // Perform update
+            } else {
+                positionsExistence[positionIds] = true;
+                // Perform mint
+            }
         }
-        
+
+        ++id;
         return (positionIds,positionsExistence[positionIds]);
     }
 

@@ -118,7 +118,7 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
 
     
     if (params.hasNft) {
-      params.amount = staterNft.balanceOf(params.onBehalfOf,params.nftId);
+      params.amount = staterNft.balanceOf(msg.sender,params.nftId);
     }
 
     ValidationLogic.validateDeposit(reserve, params.amount);
