@@ -43,7 +43,7 @@ contract StaterNft is ERC721 {
     // @DIIMIIM: This must handle both cases:
     // 1) A real mint, where a deposit is created for the first time
     // 2) A deposit, where the nft will be updated
-    function mint(uint256 positionIds) external returns(uint256) {
+    function mint(uint256 positionIds) external returns(uint256,bool) {
         
         // To be adapted to array
         if (positionsExistence[positionIds]) {
@@ -53,7 +53,7 @@ contract StaterNft is ERC721 {
             // Perform mint
         }
         
-        return positionIds;
+        return (positionIds,positionsExistence[positionIds]);
     }
 
     /*

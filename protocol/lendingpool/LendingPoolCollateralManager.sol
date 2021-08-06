@@ -18,6 +18,7 @@ import {Errors} from '../libraries/helpers/Errors.sol';
 import {ValidationLogic} from '../libraries/logic/ValidationLogic.sol';
 import {DataTypes} from '../libraries/types/DataTypes.sol';
 import {LendingPoolStorage} from './LendingPoolStorage.sol';
+import {LendingPoolStaterConnector} from '../configuration/LendingPoolStaterConnector.sol';
 
 /**
  * @title LendingPoolCollateralManager contract
@@ -29,7 +30,8 @@ import {LendingPoolStorage} from './LendingPoolStorage.sol';
 contract LendingPoolCollateralManager is
   ILendingPoolCollateralManager,
   VersionedInitializable,
-  LendingPoolStorage
+  LendingPoolStorage,
+  LendingPoolStaterConnector
 {
   using SafeERC20 for IERC20;
   using SafeMath for uint256;
@@ -161,7 +163,7 @@ contract LendingPoolCollateralManager is
       }
     }
 
-    debtReserve.updateState();
+    debtReserve.updateState(STATER_NFT);
 
     if (vars.userVariableDebt >= vars.actualDebtToLiquidate) {
       IVariableDebtToken(debtReserve.variableDebtTokenAddress).burn(
@@ -207,7 +209,7 @@ contract LendingPoolCollateralManager is
       */
 
     } else {
-      collateralReserve.updateState();
+      collateralReserve.updateState(STATER_NFT);
       collateralReserve.updateInterestRates(
         collateralAsset,
         address(0), // @DIIMIIM: nft address here //address(vars.collateralAtoken),

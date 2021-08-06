@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity >=0.6.12 <=0.8.6;
+pragma solidity 0.8.0;
 pragma experimental ABIEncoderV2;
 
 import {SafeMath} from '../../dependencies/openzeppelin/contracts/utils/math/SafeMath.sol';
@@ -46,6 +46,9 @@ import {IStaterNft} from '../../interfaces/IStaterNft.sol';
  **/
 contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage, LendingPoolStaterConnector  {
 
+  using ReserveLogic for DataTypes.ReserveData;
+  using UserConfiguration for DataTypes.UserConfigurationMap;
+  using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
   using SafeMath for uint256;
   using WadRayMath for uint256;
   using PercentageMath for uint256;
@@ -125,7 +128,7 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
 
     IERC20(params.asset).safeTransferFrom(msg.sender, STATER_NFT, params.amount);
 
-    bool isFirstDeposit = staterNft.mint(params.nftId); // @DIIMIIM: Mint or update the nft //IAToken(aToken).mint(onBehalfOf, amount, reserve.liquidityIndex);
+    (, bool isFirstDeposit) = staterNft.mint(params.nftId); // @DIIMIIM: Mint or update the nft //IAToken(aToken).mint(onBehalfOf, amount, reserve.liquidityIndex);
 
     if (isFirstDeposit) {
       _usersConfig[params.onBehalfOf].setUsingAsCollateral(reserve.id, true);
