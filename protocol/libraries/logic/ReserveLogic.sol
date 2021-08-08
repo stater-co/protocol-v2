@@ -4,7 +4,6 @@ pragma solidity >=0.6.12 <=0.8.6;
 import {SafeMath} from '../../../dependencies/openzeppelin/contracts/utils/math/SafeMath.sol';
 import {IERC20} from '../../../dependencies/openzeppelin/contracts/token/ERC20/IERC20.sol';
 import {SafeERC20} from '../../../dependencies/openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
-//import {IAToken} from '../../../interfaces/IAToken.sol';
 import {IStableDebtToken} from '../../../interfaces/IStableDebtToken.sol';
 import {IVariableDebtToken} from '../../../interfaces/IVariableDebtToken.sol';
 import {IReserveInterestRateStrategy} from '../../../interfaces/IReserveInterestRateStrategy.sol';
@@ -15,6 +14,7 @@ import {PercentageMath} from '../math/PercentageMath.sol';
 import {Errors} from '../helpers/Errors.sol';
 import {DataTypes} from '../types/DataTypes.sol';
 import {IStaterNft} from '../../../interfaces/IStaterNft.sol';
+import {Params} from '../../../interfaces/Params.sol';
 
 
 /**
@@ -109,30 +109,36 @@ library ReserveLogic {
    * @dev Updates the liquidity cumulative index and the variable borrow index.
    * @param reserve the reserve object
    **/
-  function updateState(DataTypes.ReserveData storage reserve, address nftAddress) internal {
+  function updateState(DataTypes.ReserveData storage reserve) internal {
     uint256 scaledVariableDebt =
       IVariableDebtToken(reserve.variableDebtTokenAddress).scaledTotalSupply();
     uint256 previousVariableBorrowIndex = reserve.variableBorrowIndex;
     uint256 previousLiquidityIndex = reserve.liquidityIndex;
     uint40 lastUpdatedTimestamp = reserve.lastUpdateTimestamp;
 
-    (, uint256 newVariableBorrowIndex) =
-      _updateIndexes(
-        reserve,
-        scaledVariableDebt,
-        previousLiquidityIndex,
-        previousVariableBorrowIndex,
-        lastUpdatedTimestamp
-      );
+    _updateIndexes(
+      reserve,
+      scaledVariableDebt,
+      previousLiquidityIndex,
+      previousVariableBorrowIndex,
+      lastUpdatedTimestamp
+    );
 
+    /*
+     * @DIIMIIM: I believe this is no longer required as it is calling a inherited method of the IncentivizedERC20
+     * To test later
+     */
+    /*
     _mintToTreasury(
       reserve,
       scaledVariableDebt,
       previousVariableBorrowIndex,
+      newLiquidityIndex,
       newVariableBorrowIndex,
       lastUpdatedTimestamp,
       nftAddress
     );
+    */
   }
 
   /**
@@ -197,10 +203,22 @@ library ReserveLogic {
    * liquidityAdded The amount of liquidity added to the protocol (deposit or repay) in the previous action
    * liquidityTaken The amount of liquidity taken from the protocol (redeem or borrow)
    **/
+   
+  struct DepositPosition {
+    address asset;
+    uint256 amount;
+    address onBehalfOf;
+    uint16 referralCode;
+    bool hasCurrency;
+    bool hasNft;
+    uint256 nftId;
+  }
+
+   
   function updateInterestRates(
     DataTypes.ReserveData storage reserve,
     address reserveAddress,
-    uint256 liquidityAdded,
+    Params.DepositPosition memory depositPosition,
     uint256 liquidityTaken
   ) internal {
     UpdateInterestRatesLocalVars memory vars;
@@ -223,13 +241,13 @@ library ReserveLogic {
       vars.newVariableRate
     ) = IReserveInterestRateStrategy(reserve.interestRateStrategyAddress).calculateInterestRates(
       reserveAddress,
-      //aTokenAddress,
-      liquidityAdded,
+      depositPosition.amount,
       liquidityTaken,
       vars.totalStableDebt,
       vars.totalVariableDebt,
       vars.avgStableRate,
-      reserve.configuration.getReserveFactor()
+      reserve.configuration.getReserveFactor(),
+      depositPosition.nftId
     );
     require(vars.newLiquidityRate <= type(uint128).max, Errors.RL_LIQUIDITY_RATE_OVERFLOW);
     require(vars.newStableRate <= type(uint128).max, Errors.RL_STABLE_BORROW_RATE_OVERFLOW);
@@ -271,10 +289,13 @@ library ReserveLogic {
    * @param previousVariableBorrowIndex The variable borrow index before the last accumulation of the interest
    * @param newVariableBorrowIndex The variable borrow index after the last accumulation of the interest
    **/
+
+  /*
   function _mintToTreasury(
     DataTypes.ReserveData storage reserve,
     uint256 scaledVariableDebt,
     uint256 previousVariableBorrowIndex,
+    uint256 newLiquidityIndex,
     uint256 newVariableBorrowIndex,
     uint40 timestamp,
     address nftAddress
@@ -320,10 +341,11 @@ library ReserveLogic {
     vars.amountToMint = vars.totalDebtAccrued.percentMul(vars.reserveFactor);
 
     if (vars.amountToMint != 0) {
-      IStaterNft(nftAddress);
+      IStaterNft(nftAddress).mint(positionIds);
       // @DIIMIIM: nft mint //IAToken(reserve.aTokenAddress).mintToTreasury(vars.amountToMint, newLiquidityIndex);
     }
   }
+  */
 
   /**
    * @dev Updates the reserve indexes and the timestamp of the update

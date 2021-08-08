@@ -112,13 +112,13 @@ contract DefaultReserveInterestRateStrategy is IReserveInterestRateStrategy, Len
    **/
   function calculateInterestRates(
     address reserve,
-    //address aToken,
     uint256 liquidityAdded,
     uint256 liquidityTaken,
     uint256 totalStableDebt,
     uint256 totalVariableDebt,
     uint256 averageStableBorrowRate,
-    uint256 reserveFactor
+    uint256 reserveFactor,
+    uint256 nftId
   )
     external
     view
@@ -129,7 +129,9 @@ contract DefaultReserveInterestRateStrategy is IReserveInterestRateStrategy, Len
       uint256
     )
   {
-    uint256 availableLiquidity = staterNft.balanceOf(nftId); uint256(0); // @DIIMIIM: Get nft liquidity //IERC20(reserve).balanceOf(aToken);
+    // @DIIMIIM: Gets the nft liquidity ( all positions + currency )
+    uint256 availableLiquidity = staterNft.balanceOf(nftId);
+    
     //avoid stack too deep
     availableLiquidity = availableLiquidity.add(liquidityAdded).sub(liquidityTaken);
 

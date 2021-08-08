@@ -4,8 +4,9 @@ pragma experimental ABIEncoderV2;
 
 import {ILendingPoolAddressesProvider} from './ILendingPoolAddressesProvider.sol';
 import {DataTypes} from '../protocol/libraries/types/DataTypes.sol';
+import {Params} from './Params.sol';
 
-interface ILendingPool {
+interface ILendingPool is Params {
   /**
    * @dev Emitted on deposit()
    * @param reserve The address of the underlying asset of the reserve
@@ -21,16 +22,6 @@ interface ILendingPool {
     uint256 amount,
     uint16 indexed referral
   );
-
-  struct DepositParams {
-    address asset;
-    uint256 amount;
-    address onBehalfOf;
-    uint16 referralCode;
-    bool hasCurrency;
-    bool hasNft;
-    uint256 nftId;
-  }
 
   /**
    * @dev Emitted on withdraw()
@@ -188,8 +179,9 @@ interface ILendingPool {
    * referralCode Code used to register the integrator originating the operation, for potential rewards.
    *   0 if the action is executed directly by the user, without any middle-man
    **/
+
   function deposit(
-    DepositParams memory params
+    DepositPosition[] memory depositPositions
   ) external;
 
   /**

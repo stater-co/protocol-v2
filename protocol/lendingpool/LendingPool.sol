@@ -25,6 +25,7 @@ import {DataTypes} from '../libraries/types/DataTypes.sol';
 import {LendingPoolStorage} from './LendingPoolStorage.sol';
 import {LendingPoolStaterConnector} from '../configuration/LendingPoolStaterConnector.sol';
 import {IStaterNft} from '../../interfaces/IStaterNft.sol';
+import {Params} from '../../interfaces/Params.sol';
 
 
 
@@ -44,7 +45,7 @@ import {IStaterNft} from '../../interfaces/IStaterNft.sol';
  *   LendingPoolAddressesProvider
  * @author Aave
  **/
-contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage, LendingPoolStaterConnector  {
+contract LendingPool is Params, VersionedInitializable, ILendingPool, LendingPoolStorage, LendingPoolStaterConnector {
 
   using ReserveLogic for DataTypes.ReserveData;
   using UserConfiguration for DataTypes.UserConfigurationMap;
@@ -112,32 +113,36 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
    *   0 if the action is executed directly by the user, without any middle-man
    **/
   function deposit(
-    DepositParams memory params
+    DepositPosition[] memory positions
   ) external override whenNotPaused {
-    DataTypes.ReserveData storage reserve = _reserves[params.asset];
 
-    
-    if (params.hasNft) {
-      params.amount = staterNft.balanceOf(msg.sender,params.nftId);
+    for (uint256 i = 0; i < positions.length; ++i) {
+      _depositPosition(positions[i]);
+    }    
+  }
+
+  function _depositPosition(DepositPosition memory position) internal {
+    DataTypes.ReserveData storage reserve = _reserves[position.asset];
+
+    if (position.hasNft) {
+      position.amount = staterNft.balanceOf(msg.sender,position.nftId);
     }
 
-    ValidationLogic.validateDeposit(reserve, params.amount);
+    ValidationLogic.validateDeposit(reserve, position.amount);
 
-    reserve.updateState(STATER_NFT);
-    reserve.updateInterestRates(STATER_NFT, params.amount, 0);
+    reserve.updateState();
+    reserve.updateInterestRates(STATER_NFT, position, 0);
 
-    IERC20(params.asset).safeTransferFrom(msg.sender, STATER_NFT, params.amount);
+    IERC20(position.asset).safeTransferFrom(msg.sender, STATER_NFT, position.amount);
 
-    (, bool isFirstDeposit) = staterNft.mint(params.nftId); // @DIIMIIM: Mint or update the nft //IAToken(aToken).mint(onBehalfOf, amount, reserve.liquidityIndex);
+    (, bool isFirstDeposit) = staterNft.mint(position,msg.sender);
 
     if (isFirstDeposit) {
-      _usersConfig[params.onBehalfOf].setUsingAsCollateral(reserve.id, true);
-      emit ReserveUsedAsCollateralEnabled(params.asset, params.onBehalfOf);
+      _usersConfig[position.onBehalfOf].setUsingAsCollateral(reserve.id, true);
+      emit ReserveUsedAsCollateralEnabled(position.asset, position.onBehalfOf);
     }
 
-    emit Deposit(params.asset, msg.sender, params.onBehalfOf, params.amount, params.referralCode);
-    
-    
+    emit Deposit(position.asset, msg.sender, position.onBehalfOf, position.amount, position.referralCode);
   }
 
 
@@ -157,6 +162,8 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
     uint256 amount,
     address to
   ) external override whenNotPaused returns (uint256) {
+
+    /*
     DataTypes.ReserveData storage reserve = _reserves[asset];
 
     //address aToken = address(0); // @DIIMIIM: Get the nft address here //reserve.aTokenAddress;
@@ -194,6 +201,9 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
     emit Withdraw(asset, msg.sender, to, amountToWithdraw);
 
     return amountToWithdraw;
+    */
+
+    return 55;
   }
 
   /**
@@ -255,6 +265,8 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
     uint256 rateMode,
     address onBehalfOf
   ) external override whenNotPaused returns (uint256) {
+    
+    /*
     DataTypes.ReserveData storage reserve = _reserves[asset];
 
     (uint256 stableDebt, uint256 variableDebt) = Helpers.getUserCurrentDebt(onBehalfOf, reserve);
@@ -303,6 +315,9 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
     emit Repay(asset, onBehalfOf, msg.sender, paybackAmount);
 
     return paybackAmount;
+    */
+
+    return 44;
   }
   
 
@@ -313,6 +328,8 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
    **/
 
   function swapBorrowRateMode(address asset, uint256 rateMode) external override whenNotPaused {
+
+    /*
     DataTypes.ReserveData storage reserve = _reserves[asset];
 
     (uint256 stableDebt, uint256 variableDebt) = Helpers.getUserCurrentDebt(msg.sender, reserve);
@@ -354,6 +371,7 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
     reserve.updateInterestRates(STATER_NFT, 0, 0);
 
     emit Swap(asset, msg.sender, rateMode);
+    */
   }
 
 
@@ -368,6 +386,8 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
    **/
 
   function rebalanceStableBorrowRate(address asset, address user) external override whenNotPaused {
+
+    /*
     DataTypes.ReserveData storage reserve = _reserves[asset];
 
     IERC20 stableDebtToken = IERC20(reserve.stableDebtTokenAddress);
@@ -397,6 +417,7 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
     reserve.updateInterestRates(STATER_NFT, 0, 0);
 
     emit RebalanceStableBorrowRate(asset, user);
+    */
   }
 
 
@@ -778,6 +799,8 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
 
 
   function _executeBorrow(ExecuteBorrowParams memory vars) internal {
+
+    /*
     DataTypes.ReserveData storage reserve = _reserves[vars.asset];
     DataTypes.UserConfigurationMap storage userConfig = _usersConfig[vars.onBehalfOf];
 
@@ -852,6 +875,8 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
         : reserve.currentVariableBorrowRate,
       vars.referralCode
     );
+    */
+    
   }
 
 

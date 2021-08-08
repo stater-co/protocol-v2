@@ -88,6 +88,8 @@ contract LendingPoolCollateralManager is
     uint256 debtToCover,
     bool receiveAToken
   ) external override returns (uint256, string memory) {
+
+    /*
     DataTypes.ReserveData storage collateralReserve = _reserves[collateralAsset];
     DataTypes.ReserveData storage debtReserve = _reserves[debtAsset];
     DataTypes.UserConfigurationMap storage userConfig = _usersConfig[user];
@@ -200,13 +202,12 @@ contract LendingPoolCollateralManager is
       //vars.collateralAtoken.transferOnLiquidation(user, msg.sender, vars.maxCollateralToLiquidate);
 
       // @DIIMIIM: To see if liquidatorPreviousATokenBalance will exist after nft implementation
-      /*
-      if (vars.liquidatorPreviousATokenBalance == 0) {
-        DataTypes.UserConfigurationMap storage liquidatorConfig = _usersConfig[msg.sender];
-        liquidatorConfig.setUsingAsCollateral(collateralReserve.id, true);
-        emit ReserveUsedAsCollateralEnabled(collateralAsset, msg.sender);
-      }
-      */
+      
+      // if (vars.liquidatorPreviousATokenBalance == 0) {
+        // DataTypes.UserConfigurationMap storage liquidatorConfig = _usersConfig[msg.sender];
+        // liquidatorConfig.setUsingAsCollateral(collateralReserve.id, true);
+        // emit ReserveUsedAsCollateralEnabled(collateralAsset, msg.sender);
+      // }
 
     } else {
       collateralReserve.updateState(STATER_NFT);
@@ -219,14 +220,13 @@ contract LendingPoolCollateralManager is
 
       // Burn the equivalent amount of aToken, sending the underlying to the liquidator
       // @DIIMIIM: Burn nft
-      /*
-      vars.collateralAtoken.burn(
-        user,
-        msg.sender,
-        vars.maxCollateralToLiquidate,
-        collateralReserve.liquidityIndex
-      );
-      */
+      
+      // vars.collateralAtoken.burn(
+        // user,
+        // msg.sender,
+        // vars.maxCollateralToLiquidate,
+        // collateralReserve.liquidityIndex
+      // );
     }
 
     // If the collateral being liquidated is equal to the user balance,
@@ -254,6 +254,9 @@ contract LendingPoolCollateralManager is
     );
 
     return (uint256(Errors.CollateralManagerErrors.NO_ERROR), Errors.LPCM_NO_ERRORS);
+    */
+
+    return (55,"ok");
   }
 
   struct AvailableCollateralToLiquidateLocalVars {

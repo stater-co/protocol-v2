@@ -29,13 +29,13 @@ interface IReserveInterestRateStrategy {
 
   function calculateInterestRates(
     address reserve,
-    //address aToken,
     uint256 liquidityAdded,
     uint256 liquidityTaken,
     uint256 totalStableDebt,
     uint256 totalVariableDebt,
     uint256 averageStableBorrowRate,
-    uint256 reserveFactor
+    uint256 reserveFactor,
+    uint256 nftId
   )
     external
     view
