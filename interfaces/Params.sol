@@ -11,7 +11,6 @@ interface Params {
     bool hasCurrency;
     bool hasNft;
     uint256 nftId;
-    uint256 positionId;
   }
 
   struct WithdrawParams {

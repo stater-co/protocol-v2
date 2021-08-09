@@ -180,19 +180,27 @@ contract LendingPool is Params, VersionedInitializable, ILendingPool, LendingPoo
       _addressesProvider.getPriceOracle()
     );
 
-    reserve.updateState(STATER_NFT);
+    reserve.updateState();
 
-    reserve.updateInterestRates(STATER_NFT, 0, amountToWithdraw);
+    reserve.updateInterestRates(STATER_NFT, DepositPosition(
+        params.asset,
+        amountToWithdraw,
+        msg.sender,
+        0,
+        false,
+        true,
+        params.nftId
+    ), amountToWithdraw);
 
     if (amountToWithdraw == userBalance) {
       _usersConfig[msg.sender].setUsingAsCollateral(reserve.id, false);
-      emit ReserveUsedAsCollateralDisabled(asset, msg.sender);
+      emit ReserveUsedAsCollateralDisabled(params.asset, msg.sender);
     }
 
     // @DIIMIIM: burn nft or decrease its liquidity //IAToken(aToken).burn(msg.sender, to, amountToWithdraw, reserve.liquidityIndex);
     staterNft.burn(params.nftId);
 
-    emit Withdraw(asset, msg.sender, to, amountToWithdraw);
+    emit Withdraw(params.asset, msg.sender, params.to, amountToWithdraw);
 
     return amountToWithdraw;
 
