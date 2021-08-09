@@ -68,7 +68,11 @@ contract StaterNft is ERC721, Params {
     // 1) A real mint, where a deposit is created for the first time
     // 2) A deposit, where the nft will be updated
     function mint(DepositPosition memory position, address owner) external isStater returns(uint256,bool) {
-        bool isMinted = positions[positionsExistence[position.positionId]].positions.length == 0;
+        bool isMinted;
+        if (positions[positionsExistence[position.positionId]].positions.length == 0) {
+            isMinted = true;
+            _safeMint(msg.sender, id, "");
+        }
     
         // Constructing the uniswap position
         Position.Info memory thePosition;
@@ -93,6 +97,11 @@ contract StaterNft is ERC721, Params {
         ++id;
         return (id-1,isMinted);
     }
+    
+    function burn(DepositPosition memory position, address owner) external isStater {
+        _burn(position.nftId);
+        return;
+    }
 
     /*
     function position(uint256 tokenId) external view {
@@ -111,9 +120,7 @@ contract StaterNft is ERC721, Params {
         return;
     }
 
-    function burn() external {
-        return;
-    }
+
 
     function _approve() external {
         return;

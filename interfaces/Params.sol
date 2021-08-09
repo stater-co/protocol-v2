@@ -18,6 +18,7 @@ interface Params {
     address asset;
     uint256 amount;
     address to;
+    uint256 nftId;
   }
 
 }

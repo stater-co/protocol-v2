@@ -149,35 +149,28 @@ contract LendingPool is Params, VersionedInitializable, ILendingPool, LendingPoo
   /**
    * @dev Withdraws an `amount` of underlying asset from the reserve, burning the equivalent aTokens owned
    * E.g. User has 100 aUSDC, calls withdraw() and receives 100 USDC, burning the 100 aUSDC
-   * @param asset The address of the underlying asset to withdraw
-   * @param amount The underlying amount to be withdrawn
+   * asset The address of the underlying asset to withdraw
+   * amount The underlying amount to be withdrawn
    *   - Send the value type(uint256).max in order to withdraw the whole aToken balance
-   * @param to Address that will receive the underlying, same as msg.sender if the user
+   * to Address that will receive the underlying, same as msg.sender if the user
    *   wants to receive it on his own wallet, or a different address if the beneficiary is a
    *   different wallet
-   * @return The final amount withdrawn
+   * The final amount withdrawn
    **/
-  function withdraw(
-    address asset,
-    uint256 amount,
-    address to
-  ) external override whenNotPaused returns (uint256) {
-
+  function withdraw(WithdrawParams memory params) external override whenNotPaused returns (uint256) {
     
-    DataTypes.ReserveData storage reserve = _reserves[asset];
+    DataTypes.ReserveData storage reserve = _reserves[params.asset];
+    
+    uint256 userBalance = staterNft.balanceOf(msg.sender,params.nftId);
 
-    //address aToken = address(0); // @DIIMIIM: Get the nft address here //reserve.aTokenAddress;
+    uint256 amountToWithdraw = params.amount;
 
-    uint256 userBalance = uint256(0); // @DIIMIIM: Get nft liquidity here //IAToken(aToken).balanceOf(msg.sender);
-
-    uint256 amountToWithdraw = amount;
-
-    if (amount == type(uint256).max) {
+    if (params.amount == type(uint256).max) {
       amountToWithdraw = userBalance;
     }
 
     ValidationLogic.validateWithdraw(
-      asset,
+      params.asset,
       amountToWithdraw,
       userBalance,
       _reserves,
