@@ -123,22 +123,6 @@ library ReserveLogic {
       previousVariableBorrowIndex,
       lastUpdatedTimestamp
     );
-
-    /*
-     * @DIIMIIM: I believe this is no longer required as it is calling a inherited method of the IncentivizedERC20
-     * To test later
-     */
-    /*
-    _mintToTreasury(
-      reserve,
-      scaledVariableDebt,
-      previousVariableBorrowIndex,
-      newLiquidityIndex,
-      newVariableBorrowIndex,
-      lastUpdatedTimestamp,
-      nftAddress
-    );
-    */
   }
 
   /**
@@ -266,86 +250,6 @@ library ReserveLogic {
       reserve.variableBorrowIndex
     );
   }
-
-  struct MintToTreasuryLocalVars {
-    uint256 currentStableDebt;
-    uint256 principalStableDebt;
-    uint256 previousStableDebt;
-    uint256 currentVariableDebt;
-    uint256 previousVariableDebt;
-    uint256 avgStableRate;
-    uint256 cumulatedStableInterest;
-    uint256 totalDebtAccrued;
-    uint256 amountToMint;
-    uint256 reserveFactor;
-    uint40 stableSupplyUpdatedTimestamp;
-  }
-
-  /**
-   * @dev Mints part of the repaid interest to the reserve treasury as a function of the reserveFactor for the
-   * specific asset.
-   * @param reserve The reserve reserve to be updated
-   * @param scaledVariableDebt The current scaled total variable debt
-   * @param previousVariableBorrowIndex The variable borrow index before the last accumulation of the interest
-   * @param newVariableBorrowIndex The variable borrow index after the last accumulation of the interest
-   **/
-
-  /*
-  function _mintToTreasury(
-    DataTypes.ReserveData storage reserve,
-    uint256 scaledVariableDebt,
-    uint256 previousVariableBorrowIndex,
-    uint256 newLiquidityIndex,
-    uint256 newVariableBorrowIndex,
-    uint40 timestamp,
-    address nftAddress
-  ) internal view {
-    MintToTreasuryLocalVars memory vars;
-
-    vars.reserveFactor = reserve.configuration.getReserveFactor();
-
-    if (vars.reserveFactor == 0) {
-      return;
-    }
-
-    //fetching the principal, total stable debt and the avg stable rate
-    (
-      vars.principalStableDebt,
-      vars.currentStableDebt,
-      vars.avgStableRate,
-      vars.stableSupplyUpdatedTimestamp
-    ) = IStableDebtToken(reserve.stableDebtTokenAddress).getSupplyData();
-
-    //calculate the last principal variable debt
-    vars.previousVariableDebt = scaledVariableDebt.rayMul(previousVariableBorrowIndex);
-
-    //calculate the new total supply after accumulation of the index
-    vars.currentVariableDebt = scaledVariableDebt.rayMul(newVariableBorrowIndex);
-
-    //calculate the stable debt until the last timestamp update
-    vars.cumulatedStableInterest = MathUtils.calculateCompoundedInterest(
-      vars.avgStableRate,
-      vars.stableSupplyUpdatedTimestamp,
-      timestamp
-    );
-
-    vars.previousStableDebt = vars.principalStableDebt.rayMul(vars.cumulatedStableInterest);
-
-    //debt accrued is the sum of the current debt minus the sum of the debt at the last update
-    vars.totalDebtAccrued = vars
-      .currentVariableDebt
-      .add(vars.currentStableDebt)
-      .sub(vars.previousVariableDebt)
-      .sub(vars.previousStableDebt);
-
-    vars.amountToMint = vars.totalDebtAccrued.percentMul(vars.reserveFactor);
-
-    if (vars.amountToMint != 0) {
-      IStaterNft(nftAddress).mint(positionIds);
-      // @DIIMIIM: nft mint //IAToken(reserve.aTokenAddress).mintToTreasury(vars.amountToMint, newLiquidityIndex);
-    }
-  }
-  */
 
   /**
    * @dev Updates the reserve indexes and the timestamp of the update
