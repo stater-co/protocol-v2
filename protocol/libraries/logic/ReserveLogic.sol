@@ -187,22 +187,10 @@ library ReserveLogic {
    * liquidityAdded The amount of liquidity added to the protocol (deposit or repay) in the previous action
    * liquidityTaken The amount of liquidity taken from the protocol (redeem or borrow)
    **/
-   
-  struct DepositPosition {
-    address asset;
-    uint256 amount;
-    address onBehalfOf;
-    uint16 referralCode;
-    bool hasCurrency;
-    bool hasNft;
-    uint256 nftId;
-  }
-
-   
   function updateInterestRates(
     DataTypes.ReserveData storage reserve,
     address reserveAddress,
-    Params.DepositPosition memory depositPosition,
+    Params.DepositParams memory depositParams,
     uint256 liquidityTaken
   ) internal {
     UpdateInterestRatesLocalVars memory vars;
@@ -225,13 +213,13 @@ library ReserveLogic {
       vars.newVariableRate
     ) = IReserveInterestRateStrategy(reserve.interestRateStrategyAddress).calculateInterestRates(
       reserveAddress,
-      depositPosition.amount,
+      depositParams.amount,
       liquidityTaken,
       vars.totalStableDebt,
       vars.totalVariableDebt,
       vars.avgStableRate,
       reserve.configuration.getReserveFactor(),
-      depositPosition.nftId
+      depositParams.nftId
     );
     require(vars.newLiquidityRate <= type(uint128).max, Errors.RL_LIQUIDITY_RATE_OVERFLOW);
     require(vars.newStableRate <= type(uint128).max, Errors.RL_STABLE_BORROW_RATE_OVERFLOW);

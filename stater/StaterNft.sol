@@ -18,10 +18,7 @@ contract StaterNft is ERC721, Params {
         Position.Info[] positions;
         address owner;
         uint256 id;
-        // tokensOwed0 and tokensOwed1 is stored inside Position.Info
-        address token0;
-        address token1;
-        uint24 fee;
+        mapping(address => mapping(address => uint256)) balances;
     }
 
     modifier isStater {
@@ -39,14 +36,18 @@ contract StaterNft is ERC721, Params {
         STATER = stater;
     }
 
-    uint256 public id;
+    uint256 public id = 1;
     mapping(uint256 => StaterPosition) positions;
 
-    function totalSupply(uint256 positionId) external view returns(uint256) {
+    function totalPositionsLiquidity(uint256 positionId) external view returns(uint256) {
         uint256 theTotalSupply;
         for (uint256 i = 0; i < positions[positionId].positions.length; ++i)
             theTotalSupply += positions[positionId].positions[i].liquidity;
         return theTotalSupply;
+    }
+
+    function balanceOfNftCurrency(uint256 positionId, address holder, address asset) external view returns(uint256) {
+        return positions[positionId].balances[asset][holder];
     }
 
     // @DIIMIIM: Will return the child token id
@@ -64,10 +65,10 @@ contract StaterNft is ERC721, Params {
     // @DIIMIIM: This must handle both cases:
     // 1) A real mint, where a deposit is created for the first time
     // 2) A deposit, where the nft will be updated
-    function mint(DepositPosition memory position, address owner) external isStater returns(uint256,bool) {
+    function mint(DepositParams memory params, address owner) external isStater returns(uint256,bool) {
         bool isMinted;
         
-        if (positions[position.positionId].positions.length == 0) {
+        if (positions[params.nftId].positions.length == 0) {
             isMinted = true;
             _safeMint(msg.sender, id, "");
         }
@@ -87,10 +88,10 @@ contract StaterNft is ERC721, Params {
             thePosition.feeGrowthInside1LastX128,
             thePosition.tokensOwed0,
             thePosition.tokensOwed1
-        ) = nonFungiblePositionManager.positions(position.positionId);
+        ) = nonFungiblePositionManager.positions(params.nftId);
 
-        positions[position.positionId].positions.push(thePosition);
-        positions[position.positionId].owner = owner;
+        positions[params.nftId].positions.push(thePosition);
+        positions[params.nftId].owner = owner;
         
         ++id;
         return (id-1,isMinted);

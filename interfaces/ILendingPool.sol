@@ -181,7 +181,7 @@ interface ILendingPool is Params {
    **/
 
   function deposit(
-    DepositPosition[] memory depositPositions
+    DepositParams[] memory depositParams
   ) external;
 
   /**
@@ -196,8 +196,8 @@ interface ILendingPool is Params {
    * The final amount withdrawn
    **/
   function withdraw(
-    WithdrawParams memory params
-  ) external returns (uint256);
+    WithdrawParams[] memory params
+  ) external;
 
   /**
    * @dev Allows users to borrow a specific `amount` of the reserve underlying asset, provided that the borrower

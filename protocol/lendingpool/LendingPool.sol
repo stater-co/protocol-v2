@@ -4,6 +4,7 @@ pragma experimental ABIEncoderV2;
 
 import {SafeMath} from '../../dependencies/openzeppelin/contracts/utils/math/SafeMath.sol';
 import {IERC20} from '../../dependencies/openzeppelin/contracts/token/ERC20/IERC20.sol';
+import {IERC721} from '../../dependencies/openzeppelin/contracts/token/ERC721/IERC721.sol';
 import {SafeERC20} from '../../dependencies/openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
 import {Address} from '../../dependencies/openzeppelin/contracts/utils/Address.sol';
 import {ILendingPoolAddressesProvider} from '../../interfaces/ILendingPoolAddressesProvider.sol';
@@ -113,27 +114,33 @@ contract LendingPool is Params, VersionedInitializable, ILendingPool, LendingPoo
    *   0 if the action is executed directly by the user, without any middle-man
    **/
   function deposit(
-    DepositPosition[] memory positions
+    DepositParams[] memory params
   ) external override whenNotPaused {
-
-    for (uint256 i = 0; i < positions.length; ++i) {
-      _depositPosition(positions[i]);
+    for (uint256 i = 0; i < params.length; ++i) {
+      _deposit(params[i]);
     }    
   }
 
-  function _depositPosition(DepositPosition memory position) internal {
+
+  // Now it should handle both uniswap v3 positions and currency deposit
+  function _deposit(DepositParams memory position) internal {
     DataTypes.ReserveData storage reserve = _reserves[position.asset];
-
-    if (position.hasNft) {
-      position.amount = staterNft.balanceOf(msg.sender,position.nftId);
-    }
-
-    ValidationLogic.validateDeposit(reserve, position.amount);
 
     reserve.updateState();
     reserve.updateInterestRates(STATER_NFT, position, 0);
 
-    IERC20(position.asset).safeTransferFrom(msg.sender, STATER_NFT, position.amount);
+    if (position.hasNft) {
+
+      IERC721(position.nftAddress).safeTransferFrom(msg.sender, STATER_NFT, position.nftId);
+    
+    } else {
+
+      // the deposit request has currency      
+      ValidationLogic.validateDeposit(reserve, position.amount);
+      IERC20(position.asset).safeTransferFrom(msg.sender, STATER_NFT, position.amount);
+
+    }
+
 
     (, bool isFirstDeposit) = staterNft.mint(position,msg.sender);
 
@@ -157,10 +164,16 @@ contract LendingPool is Params, VersionedInitializable, ILendingPool, LendingPoo
    *   different wallet
    * The final amount withdrawn
    **/
-  function withdraw(WithdrawParams memory params) external override whenNotPaused returns (uint256) {
-    
+  function withdraw(WithdrawParams[] memory params) external override whenNotPaused {
+    for (uint256 i = 0; i < params.length; ++i) {
+      _withdraw(params[i]);
+    }
+  }
+  
+  function _withdraw(WithdrawParams memory params) internal {
     DataTypes.ReserveData storage reserve = _reserves[params.asset];
     
+    // Fix: user cannot withdraw his position liquidity
     uint256 userBalance = staterNft.balanceOf(msg.sender,params.nftId);
 
     uint256 amountToWithdraw = params.amount;
@@ -181,15 +194,16 @@ contract LendingPool is Params, VersionedInitializable, ILendingPool, LendingPoo
     );
 
     reserve.updateState();
-
-    reserve.updateInterestRates(STATER_NFT, DepositPosition(
+    
+    reserve.updateInterestRates(STATER_NFT, DepositParams(
         params.asset,
         amountToWithdraw,
         msg.sender,
+        address(0),
+        params.nftId,
         0,
         false,
-        true,
-        params.nftId
+        true
     ), amountToWithdraw);
 
     if (amountToWithdraw == userBalance) {
@@ -197,13 +211,9 @@ contract LendingPool is Params, VersionedInitializable, ILendingPool, LendingPoo
       emit ReserveUsedAsCollateralDisabled(params.asset, msg.sender);
     }
 
-    // @DIIMIIM: burn nft or decrease its liquidity //IAToken(aToken).burn(msg.sender, to, amountToWithdraw, reserve.liquidityIndex);
     staterNft.burn(params.nftId);
 
     emit Withdraw(params.asset, msg.sender, params.to, amountToWithdraw);
-
-    return amountToWithdraw;
-
   }
 
   /**
@@ -221,7 +231,7 @@ contract LendingPool is Params, VersionedInitializable, ILendingPool, LendingPoo
    * calling the function if he wants to borrow against his own collateral, or the address of the credit delegator
    * if he has been given credit delegation allowance
    **/
-
+  // The borrower mechanism can use the lending pools currency only
   function borrow(
     address asset,
     uint256 amount,
@@ -435,7 +445,6 @@ contract LendingPool is Params, VersionedInitializable, ILendingPool, LendingPoo
     DataTypes.ReserveData storage reserve = _reserves[asset];
 
     ValidationLogic.validateSetUseReserveAsCollateral(
-      //reserve,
       asset,
       useAsCollateral,
       _reserves,
@@ -784,23 +793,8 @@ contract LendingPool is Params, VersionedInitializable, ILendingPool, LendingPoo
   }
 
 
-
-  struct ExecuteBorrowParams {
-    address asset;
-    address user;
-    address onBehalfOf;
-    uint256 amount;
-    uint256 interestRateMode;
-    uint256 tokenId;
-    uint16 referralCode;
-    bool releaseUnderlying;
-  }
-
-
-
   function _executeBorrow(ExecuteBorrowParams memory vars) internal {
 
-    /*
     DataTypes.ReserveData storage reserve = _reserves[vars.asset];
     DataTypes.UserConfigurationMap storage userConfig = _usersConfig[vars.onBehalfOf];
 
@@ -812,7 +806,6 @@ contract LendingPool is Params, VersionedInitializable, ILendingPool, LendingPoo
       );
 
     ValidationLogic.validateBorrow(
-      //vars.asset,
       reserve,
       vars.onBehalfOf,
       vars.amount,
@@ -826,7 +819,7 @@ contract LendingPool is Params, VersionedInitializable, ILendingPool, LendingPoo
       oracle
     );
 
-    reserve.updateState(STATER_NFT);
+    reserve.updateState();
 
     uint256 currentStableRate = 0;
 
@@ -854,8 +847,17 @@ contract LendingPool is Params, VersionedInitializable, ILendingPool, LendingPoo
     }
 
     reserve.updateInterestRates(
-      STATER_NFT, //address(0), // @DIIMIIM: nft address here //vars.aTokenAddress,
-      0,
+      STATER_NFT,
+      DepositParams(
+        vars.asset,
+        vars.amount,
+        msg.sender,
+        address(0),
+        0,
+        0,
+        false,
+        false
+      ),
       vars.releaseUnderlying ? vars.amount : 0
     );
 
@@ -875,7 +877,6 @@ contract LendingPool is Params, VersionedInitializable, ILendingPool, LendingPoo
         : reserve.currentVariableBorrowRate,
       vars.referralCode
     );
-    */
     
   }
 
