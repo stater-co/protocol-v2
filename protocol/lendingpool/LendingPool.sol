@@ -190,6 +190,7 @@ contract LendingPool is Params, VersionedInitializable, ILendingPool, LendingPoo
     }
 
     // @DIIMIIM: burn nft or decrease its liquidity //IAToken(aToken).burn(msg.sender, to, amountToWithdraw, reserve.liquidityIndex);
+    staterNft.burn(params.nftId);
 
     emit Withdraw(asset, msg.sender, to, amountToWithdraw);
 

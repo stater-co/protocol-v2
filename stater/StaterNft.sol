@@ -41,9 +41,6 @@ contract StaterNft is ERC721, Params {
 
     uint256 public id;
     mapping(uint256 => StaterPosition) positions;
-    
-    // Uniswap position id => stater position id
-    mapping(uint256 => uint256) positionsExistence;
 
     function totalSupply(uint256 positionId) external view returns(uint256) {
         uint256 theTotalSupply;
@@ -69,7 +66,8 @@ contract StaterNft is ERC721, Params {
     // 2) A deposit, where the nft will be updated
     function mint(DepositPosition memory position, address owner) external isStater returns(uint256,bool) {
         bool isMinted;
-        if (positions[positionsExistence[position.positionId]].positions.length == 0) {
+        
+        if (positions[position.positionId].positions.length == 0) {
             isMinted = true;
             _safeMint(msg.sender, id, "");
         }
@@ -91,16 +89,16 @@ contract StaterNft is ERC721, Params {
             thePosition.tokensOwed1
         ) = nonFungiblePositionManager.positions(position.positionId);
 
-        positions[positionsExistence[position.positionId]].positions.push(thePosition);
-        positions[positionsExistence[position.positionId]].owner = owner;
+        positions[position.positionId].positions.push(thePosition);
+        positions[position.positionId].owner = owner;
         
         ++id;
         return (id-1,isMinted);
     }
     
-    function burn(DepositPosition memory position, address owner) external isStater {
-        _burn(position.nftId);
-        return;
+    function burn(uint256 nftId) external isStater {
+        _burn(nftId);
+        delete positions[nftId];
     }
 
     /*
