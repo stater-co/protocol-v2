@@ -163,7 +163,7 @@ contract LendingPool is Params, VersionedInitializable, ILendingPool, LendingPoo
     address to
   ) external override whenNotPaused returns (uint256) {
 
-    /*
+    
     DataTypes.ReserveData storage reserve = _reserves[asset];
 
     //address aToken = address(0); // @DIIMIIM: Get the nft address here //reserve.aTokenAddress;
@@ -201,9 +201,7 @@ contract LendingPool is Params, VersionedInitializable, ILendingPool, LendingPoo
     emit Withdraw(asset, msg.sender, to, amountToWithdraw);
 
     return amountToWithdraw;
-    */
 
-    return 55;
   }
 
   /**

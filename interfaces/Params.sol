@@ -14,4 +14,10 @@ interface Params {
     uint256 positionId;
   }
 
+  struct WithdrawParams {
+    address asset;
+    uint256 amount;
+    address to;
+  }
+
 }
