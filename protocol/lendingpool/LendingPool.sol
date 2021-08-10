@@ -728,15 +728,12 @@ contract LendingPool is Params, VersionedInitializable, ILendingPool, LendingPoo
 
   function initReserve(
     address asset,
-    //address aTokenAddress,
     address stableDebtAddress,
     address variableDebtAddress,
     address interestRateStrategyAddress
   ) external override onlyLendingPoolConfigurator {
     require(Address.isContract(asset), Errors.LP_NOT_CONTRACT);
-    // @DIIMIIM: atokenaddress will be no longer used. The same nft contract for all reserves
     _reserves[asset].init(
-      //aTokenAddress,
       stableDebtAddress,
       variableDebtAddress,
       interestRateStrategyAddress

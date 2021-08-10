@@ -309,7 +309,6 @@ interface ILendingPool is Params {
 
   function initReserve(
     address reserve,
-    //address aTokenAddress,
     address stableDebtAddress,
     address variableDebtAddress,
     address interestRateStrategyAddress
