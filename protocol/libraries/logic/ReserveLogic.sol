@@ -160,9 +160,6 @@ library ReserveLogic {
     address interestRateStrategyAddress
   ) external {
 
-    // @DIIMIIM: this is commented out now, possible to be changed in the future
-    //require(reserve.aTokenAddress == address(0), Errors.RL_RESERVE_ALREADY_INITIALIZED);
-
     reserve.liquidityIndex = uint128(WadRayMath.ray());
     reserve.variableBorrowIndex = uint128(WadRayMath.ray());
     reserve.stableDebtTokenAddress = stableDebtTokenAddress;

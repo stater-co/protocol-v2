@@ -360,15 +360,6 @@ interface ILendingPool is Params {
    **/
   function getReserveData(address asset) external view returns (DataTypes.ReserveData memory);
 
-  function finalizeTransfer(
-    address asset,
-    address from,
-    address to,
-    uint256 amount,
-    uint256 balanceFromAfter,
-    uint256 balanceToBefore
-  ) external;
-
   function getReservesList() external view returns (address[] memory);
 
   function getAddressesProvider() external view returns (ILendingPoolAddressesProvider);

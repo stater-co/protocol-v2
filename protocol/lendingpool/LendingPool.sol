@@ -276,7 +276,6 @@ contract LendingPool is Params, VersionedInitializable, ILendingPool, LendingPoo
     address onBehalfOf
   ) external override whenNotPaused returns (uint256) {
     
-    /*
     DataTypes.ReserveData storage reserve = _reserves[asset];
 
     (uint256 stableDebt, uint256 variableDebt) = Helpers.getUserCurrentDebt(onBehalfOf, reserve);
@@ -299,7 +298,7 @@ contract LendingPool is Params, VersionedInitializable, ILendingPool, LendingPoo
       paybackAmount = amount;
     }
 
-    reserve.updateState(STATER_NFT);
+    reserve.updateState();
 
     if (interestRateMode == DataTypes.InterestRateMode.STABLE) {
       IStableDebtToken(reserve.stableDebtTokenAddress).burn(onBehalfOf, paybackAmount);
@@ -312,7 +311,18 @@ contract LendingPool is Params, VersionedInitializable, ILendingPool, LendingPoo
     }
 
     //address aToken = address(0); // @DIIMIIM: nft address here //reserve.aTokenAddress;
-    reserve.updateInterestRates(STATER_NFT, paybackAmount, 0);
+    reserve.updateInterestRates(STATER_NFT, 
+      DepositParams(
+        asset,
+        amount,
+        onBehalfOf,
+        STATER_NFT,
+        0,
+        0,
+        true,
+        false
+      ), 
+    0);
 
     if (stableDebt.add(variableDebt).sub(paybackAmount) == 0) {
       _usersConfig[onBehalfOf].setBorrowing(reserve.id, false);
@@ -320,14 +330,10 @@ contract LendingPool is Params, VersionedInitializable, ILendingPool, LendingPoo
 
     IERC20(asset).safeTransferFrom(msg.sender, STATER_NFT, paybackAmount);
 
-    // @DIIMIIM: update nft here, repayment //IAToken(aToken).handleRepayment(msg.sender, paybackAmount);
-
     emit Repay(asset, onBehalfOf, msg.sender, paybackAmount);
 
     return paybackAmount;
-    */
 
-    return 44;
   }
   
 
@@ -804,7 +810,7 @@ contract LendingPool is Params, VersionedInitializable, ILendingPool, LendingPoo
         address(0),
         0,
         0,
-        false,
+        true,
         false
       ),
       vars.releaseUnderlying ? vars.amount : 0
