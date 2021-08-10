@@ -212,7 +212,7 @@ library ReserveLogic {
       vars.newStableRate,
       vars.newVariableRate
     ) = IReserveInterestRateStrategy(reserve.interestRateStrategyAddress).calculateInterestRates(
-      CalculateInterestRatesParams(
+      Params.CalculateInterestRatesParams(
         reserveAddress,
         depositParams.amount,
         liquidityTaken,

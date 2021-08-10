@@ -29,7 +29,7 @@ interface IReserveInterestRateStrategy {
     );
 
   function calculateInterestRates(
-    CalculateInterestRatesParams memory params
+    Params.CalculateInterestRatesParams memory params
   )
     external
     view
