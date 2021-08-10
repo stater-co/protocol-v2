@@ -861,11 +861,6 @@ contract LendingPool is Params, VersionedInitializable, ILendingPool, LendingPoo
       vars.releaseUnderlying ? vars.amount : 0
     );
 
-    if (vars.releaseUnderlying) {
-      // @DIIMIIM: Transfer nft here
-      //IAToken(vars.aTokenAddress).transferUnderlyingTo(vars.user, vars.amount);
-    }
-
     emit Borrow(
       vars.asset,
       vars.user,
