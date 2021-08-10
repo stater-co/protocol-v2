@@ -10,6 +10,8 @@ import {ILendingRateOracle} from '../../interfaces/ILendingRateOracle.sol';
 import {IERC20} from '../../dependencies/openzeppelin/contracts/token/ERC20/IERC20.sol';
 import {LendingPoolStaterConnector} from '../configuration/LendingPoolStaterConnector.sol';
 import {IStaterNft} from '../../interfaces/IStaterNft.sol';
+import {Params} from '../../interfaces/Params.sol';
+
 
 /**
  * @title DefaultReserveInterestRateStrategy contract
@@ -111,14 +113,7 @@ contract DefaultReserveInterestRateStrategy is IReserveInterestRateStrategy, Len
    * @return The liquidity rate, the stable borrow rate and the variable borrow rate
    **/
   function calculateInterestRates(
-    address reserve,
-    uint256 liquidityAdded,
-    uint256 liquidityTaken,
-    uint256 totalStableDebt,
-    uint256 totalVariableDebt,
-    uint256 averageStableBorrowRate,
-    uint256 reserveFactor,
-    uint256 nftId
+    CalculateInterestRatesParams memory params
   )
     external
     view
@@ -130,28 +125,25 @@ contract DefaultReserveInterestRateStrategy is IReserveInterestRateStrategy, Len
     )
   {
     // @DIIMIIM: Gets the nft liquidity ( all positions + currency )
-    uint256 availableLiquidity = staterNft.balanceOf(nftId);
-    
+    uint256 availableLiquidity;
+    if (params.hasNft) {
+      availableLiquidity = staterNft.balanceOf(params.nftId);
+    } else {
+      availableLiquidity = IERC20(params.reserve).balanceOf(STATER_NFT);
+    }
+
     //avoid stack too deep
-    availableLiquidity = availableLiquidity.add(liquidityAdded).sub(liquidityTaken);
+    availableLiquidity = availableLiquidity.add(params.liquidityAdded).sub(params.liquidityTaken);
 
     return
       calculateInterestRates(
-        reserve,
+        params.reserve,
         availableLiquidity,
-        totalStableDebt,
-        totalVariableDebt,
-        averageStableBorrowRate,
-        reserveFactor
+        params.totalStableDebt,
+        params.totalVariableDebt,
+        params.averageStableBorrowRate,
+        params.reserveFactor
       );
-  }
-
-  struct CalcInterestRatesLocalVars {
-    uint256 totalDebt;
-    uint256 currentVariableBorrowRate;
-    uint256 currentStableBorrowRate;
-    uint256 currentLiquidityRate;
-    uint256 utilizationRate;
   }
 
   /**
@@ -233,6 +225,15 @@ contract DefaultReserveInterestRateStrategy is IReserveInterestRateStrategy, Len
       vars.currentVariableBorrowRate
     );
   }
+
+  struct CalcInterestRatesLocalVars {
+    uint256 totalDebt;
+    uint256 currentVariableBorrowRate;
+    uint256 currentStableBorrowRate;
+    uint256 currentLiquidityRate;
+    uint256 utilizationRate;
+  }
+
 
   /**
    * @dev Calculates the overall borrow rate as the weighted average between the total variable debt and total stable debt

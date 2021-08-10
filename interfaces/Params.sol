@@ -35,4 +35,16 @@ interface Params {
     bool releaseUnderlying;
   }
 
+  struct CalculateInterestRatesParams {
+    address reserve;
+    uint256 liquidityAdded;
+    uint256 liquidityTaken;
+    uint256 totalStableDebt;
+    uint256 totalVariableDebt;
+    uint256 averageStableBorrowRate;
+    uint256 reserveFactor;
+    uint256 nftId;
+    bool hasNft;
+  }
+
 }

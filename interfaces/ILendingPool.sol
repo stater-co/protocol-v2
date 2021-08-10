@@ -149,7 +149,7 @@ interface ILendingPool is Params {
 
   /**
    * @dev Emitted when the state of a reserve is updated. NOTE: This event is actually declared
-   * in the ReserveLogic library and emitted in the updateInterestRates() function. Since the function is internal,
+   * in the ReserveLogic library and emitted in the update-InterestRates() function. Since the function is internal,
    * the event will actually be fired by the LendingPool contract. The event is therefore replicated here so it
    * gets added to the LendingPool ABI
    * @param reserve The address of the underlying asset of the reserve

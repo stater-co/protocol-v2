@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity >=0.6.12 <=0.8.6;
 
+import {Params} from './Params.sol';
 /**
  * @title IReserveInterestRateStrategyInterface interface
  * @dev Interface for the calculation of the interest rates
@@ -28,14 +29,7 @@ interface IReserveInterestRateStrategy {
     );
 
   function calculateInterestRates(
-    address reserve,
-    uint256 liquidityAdded,
-    uint256 liquidityTaken,
-    uint256 totalStableDebt,
-    uint256 totalVariableDebt,
-    uint256 averageStableBorrowRate,
-    uint256 reserveFactor,
-    uint256 nftId
+    CalculateInterestRatesParams memory params
   )
     external
     view
