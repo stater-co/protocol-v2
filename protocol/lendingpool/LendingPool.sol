@@ -345,7 +345,6 @@ contract LendingPool is Params, VersionedInitializable, ILendingPool, LendingPoo
 
   function swapBorrowRateMode(address asset, uint256 rateMode) external override whenNotPaused {
 
-    /*
     DataTypes.ReserveData storage reserve = _reserves[asset];
 
     (uint256 stableDebt, uint256 variableDebt) = Helpers.getUserCurrentDebt(msg.sender, reserve);
@@ -360,7 +359,7 @@ contract LendingPool is Params, VersionedInitializable, ILendingPool, LendingPoo
       interestRateMode
     );
 
-    reserve.updateState(STATER_NFT);
+    reserve.updateState();
 
     if (interestRateMode == DataTypes.InterestRateMode.STABLE) {
       IStableDebtToken(reserve.stableDebtTokenAddress).burn(msg.sender, stableDebt);
@@ -384,10 +383,21 @@ contract LendingPool is Params, VersionedInitializable, ILendingPool, LendingPoo
       );
     }
 
-    reserve.updateInterestRates(STATER_NFT, 0, 0);
+    reserve.updateInterestRates(STATER_NFT,
+        DepositParams(
+            asset,
+            0,
+            msg.sender,
+            STATER_NFT,
+            0,
+            0,
+            true,
+            false
+        ),
+      0);
 
     emit Swap(asset, msg.sender, rateMode);
-    */
+    
   }
 
 
