@@ -310,7 +310,6 @@ contract LendingPool is Params, VersionedInitializable, ILendingPool, LendingPoo
       );
     }
 
-    //address aToken = address(0); // @DIIMIIM: nft address here //reserve.aTokenAddress;
     reserve.updateInterestRates(STATER_NFT, 
       DepositParams(
         asset,

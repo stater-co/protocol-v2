@@ -39,26 +39,26 @@ contract StaterNft is ERC721, Params {
     uint256 public id = 1;
     mapping(uint256 => StaterPosition) positions;
 
-    function totalPositionsLiquidity(uint256 positionId) external view returns(uint256) {
+    function totalPositionsLiquidity(uint256 nftId) external view returns(uint256) {
         uint256 theTotalSupply;
-        for (uint256 i = 0; i < positions[positionId].positions.length; ++i)
-            theTotalSupply += positions[positionId].positions[i].liquidity;
+        for (uint256 i = 0; i < positions[nftId].positions.length; ++i)
+            theTotalSupply += positions[nftId].positions[i].liquidity;
         return theTotalSupply;
     }
 
-    function balanceOfNftCurrency(uint256 positionId, address holder, address asset) external view returns(uint256) {
-        return positions[positionId].balances[asset][holder];
+    function balanceOfNftCurrency(uint256 nftId, address holder, address asset) external view returns(uint256) {
+        return positions[nftId].balances[asset][holder];
     }
 
     // @DIIMIIM: Will return the child token id
-    function splitNft(uint256 parentPositionId, uint128 toSplit) external pure returns(uint256) {
+    function splitNft(uint256 parentNftId, uint128 toSplit) external pure returns(uint256) {
         
         // @DIIMIIM: To be discussed with Raziel
-        return parentPositionId / toSplit;
+        return parentNftId / toSplit;
     }
 
-    function balanceOf(uint256 positionId) external view returns(uint128) {
-        (,,,,,,,uint128 balance,,,,) = nonFungiblePositionManager.positions(positionId);
+    function balanceOf(uint256 nftId) external view returns(uint128) {
+        (,,,,,,,uint128 balance,,,,) = nonFungiblePositionManager.positions(nftId);
         return balance;
     }
 
