@@ -78,18 +78,16 @@ contract LendingPoolCollateralManager is
    * @param debtAsset The address of the underlying borrowed asset to be repaid with the liquidation
    * @param user The address of the borrower getting liquidated
    * @param debtToCover The debt amount of borrowed `asset` the liquidator wants to cover
-   * @param receiveAToken `true` if the liquidators wants to receive the collateral aTokens, `false` if he wants
+   * `true` if the liquidators wants to receive the collateral aTokens, `false` if he wants
    * to receive the underlying collateral asset directly
    **/
   function liquidationCall(
     address collateralAsset,
     address debtAsset,
     address user,
-    uint256 debtToCover,
-    bool receiveAToken
+    uint256 debtToCover
   ) external override returns (uint256, string memory) {
 
-    /*
     DataTypes.ReserveData storage collateralReserve = _reserves[collateralAsset];
     DataTypes.ReserveData storage debtReserve = _reserves[debtAsset];
     DataTypes.UserConfigurationMap storage userConfig = _usersConfig[user];
@@ -120,9 +118,7 @@ contract LendingPoolCollateralManager is
       return (vars.errorCode, vars.errorMsg);
     }
 
-    vars.collateralAtoken = address(0); // @DIIMIIM: Initialize nft here //IAToken(collateralReserve.aTokenAddress);
-
-    vars.userCollateralBalance = vars.collateralAtoken.balanceOf(user);
+    vars.userCollateralBalance = IERC20(collateralAsset).balanceOf(user);
 
     vars.maxLiquidatableDebt = vars.userStableDebt.add(vars.userVariableDebt).percentMul(
       LIQUIDATION_CLOSE_FACTOR_PERCENT
@@ -152,19 +148,6 @@ contract LendingPoolCollateralManager is
       vars.actualDebtToLiquidate = vars.debtAmountNeeded;
     }
 
-    // If the liquidator reclaims the underlying asset, we make sure there is enough available liquidity in the
-    // collateral reserve
-    if (!receiveAToken) {
-      uint256 currentAvailableCollateral =
-        0; // @DIIMIIM: Get nft liquidity //IERC20(collateralAsset).balanceOf(address(vars.collateralAtoken));
-      if (currentAvailableCollateral < vars.maxCollateralToLiquidate) {
-        return (
-          uint256(Errors.CollateralManagerErrors.NOT_ENOUGH_LIQUIDITY),
-          Errors.LPCM_NOT_ENOUGH_LIQUIDITY_TO_LIQUIDATE
-        );
-      }
-    }
-
     debtReserve.updateState(STATER_NFT);
 
     if (vars.userVariableDebt >= vars.actualDebtToLiquidate) {
@@ -190,44 +173,28 @@ contract LendingPoolCollateralManager is
 
     debtReserve.updateInterestRates(
       debtAsset,
-      address(0), // @DIIMIIM: nft address here //debtReserve.aTokenAddress,
+      debtAsset,
       vars.actualDebtToLiquidate,
       0
     );
 
-    if (receiveAToken) {
-      vars.liquidatorPreviousATokenBalance = 0; // @DIIMIIM: get nft liquidity here //IERC20(vars.collateralAtoken).balanceOf(msg.sender);
-      
-      // @DIIMIIM: Transfer nft liquidity here
-      //vars.collateralAtoken.transferOnLiquidation(user, msg.sender, vars.maxCollateralToLiquidate);
+    collateralReserve.updateState();
+    collateralReserve.updateInterestRates(
+      collateralAsset,
+      address(0), // @DIIMIIM: nft address here //address(vars.collateralAtoken),
+      0,
+      vars.maxCollateralToLiquidate
+    );
 
-      // @DIIMIIM: To see if liquidatorPreviousATokenBalance will exist after nft implementation
-      
-      // if (vars.liquidatorPreviousATokenBalance == 0) {
-        // DataTypes.UserConfigurationMap storage liquidatorConfig = _usersConfig[msg.sender];
-        // liquidatorConfig.setUsingAsCollateral(collateralReserve.id, true);
-        // emit ReserveUsedAsCollateralEnabled(collateralAsset, msg.sender);
-      // }
-
-    } else {
-      collateralReserve.updateState(STATER_NFT);
-      collateralReserve.updateInterestRates(
-        collateralAsset,
-        address(0), // @DIIMIIM: nft address here //address(vars.collateralAtoken),
-        0,
-        vars.maxCollateralToLiquidate
-      );
-
-      // Burn the equivalent amount of aToken, sending the underlying to the liquidator
-      // @DIIMIIM: Burn nft
-      
-      // vars.collateralAtoken.burn(
-        // user,
-        // msg.sender,
-        // vars.maxCollateralToLiquidate,
-        // collateralReserve.liquidityIndex
-      // );
-    }
+    // Burn the equivalent amount of aToken, sending the underlying to the liquidator
+    // @DIIMIIM: Burn nft
+    
+    // vars.collateralAtoken.burn(
+      // user,
+      // msg.sender,
+      // vars.maxCollateralToLiquidate,
+      // collateralReserve.liquidityIndex
+    // );
 
     // If the collateral being liquidated is equal to the user balance,
     // we set the currency as not being used as collateral anymore
@@ -254,9 +221,7 @@ contract LendingPoolCollateralManager is
     );
 
     return (uint256(Errors.CollateralManagerErrors.NO_ERROR), Errors.LPCM_NO_ERRORS);
-    */
 
-    return (55,"ok");
   }
 
   struct AvailableCollateralToLiquidateLocalVars {
