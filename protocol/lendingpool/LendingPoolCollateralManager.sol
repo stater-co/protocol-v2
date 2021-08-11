@@ -3,7 +3,7 @@ pragma solidity 0.8.0;
 
 import {SafeMath} from '../../dependencies/openzeppelin/contracts/utils/math/SafeMath.sol';
 import {IERC20} from '../../dependencies/openzeppelin/contracts/token/ERC20/IERC20.sol';
-//import {IAToken} from '../../interfaces/IAToken.sol';
+import {ReserveLogic} from '../libraries/logic/ReserveLogic.sol';
 import {IStableDebtToken} from '../../interfaces/IStableDebtToken.sol';
 import {IVariableDebtToken} from '../../interfaces/IVariableDebtToken.sol';
 import {IPriceOracleGetter} from '../../interfaces/IPriceOracleGetter.sol';
@@ -16,9 +16,11 @@ import {PercentageMath} from '../libraries/math/PercentageMath.sol';
 import {SafeERC20} from '../../dependencies/openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
 import {Errors} from '../libraries/helpers/Errors.sol';
 import {ValidationLogic} from '../libraries/logic/ValidationLogic.sol';
+import {ReserveConfiguration} from '../libraries/configuration/ReserveConfiguration.sol';
 import {DataTypes} from '../libraries/types/DataTypes.sol';
 import {LendingPoolStorage} from './LendingPoolStorage.sol';
 import {LendingPoolStaterConnector} from '../configuration/LendingPoolStaterConnector.sol';
+import {Params} from '../../interfaces/Params.sol';
 
 /**
  * @title LendingPoolCollateralManager contract
@@ -37,6 +39,8 @@ contract LendingPoolCollateralManager is
   using SafeMath for uint256;
   using WadRayMath for uint256;
   using PercentageMath for uint256;
+  using ReserveLogic for DataTypes.ReserveData;
+  using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
 
   uint256 internal constant LIQUIDATION_CLOSE_FACTOR_PERCENT = 5000;
 
@@ -51,7 +55,7 @@ contract LendingPoolCollateralManager is
     uint256 userStableRate;
     uint256 maxCollateralToLiquidate;
     uint256 debtAmountNeeded;
-    uint256 healthFactor;
+    int256 healthFactor;
     uint256 tokenId;
     //uint256 liquidatorPreviousATokenBalance;
     //IAToken collateralAtoken;
@@ -94,7 +98,7 @@ contract LendingPoolCollateralManager is
 
     LiquidationCallLocalVars memory vars;
 
-    /*
+    
     (, , , , vars.healthFactor) = GenericLogic.calculateUserAccountData(
       user,
       _reserves,
@@ -149,7 +153,7 @@ contract LendingPoolCollateralManager is
       vars.actualDebtToLiquidate = vars.debtAmountNeeded;
     }
 
-    debtReserve.updateState(STATER_NFT);
+    debtReserve.updateState();
 
     if (vars.userVariableDebt >= vars.actualDebtToLiquidate) {
       IVariableDebtToken(debtReserve.variableDebtTokenAddress).burn(
@@ -174,40 +178,22 @@ contract LendingPoolCollateralManager is
 
     debtReserve.updateInterestRates(
       debtAsset,
-      debtAsset,
-      vars.actualDebtToLiquidate,
-      0
-    );
-
-    collateralReserve.updateState();
-    collateralReserve.updateInterestRates(
-      collateralAsset,
-      address(0), // @DIIMIIM: nft address here //address(vars.collateralAtoken),
-      0,
-      vars.maxCollateralToLiquidate
-    );
-
-    // Burn the equivalent amount of aToken, sending the underlying to the liquidator
-    // @DIIMIIM: Burn nft
-    
-    // vars.collateralAtoken.burn(
-      // user,
-      // msg.sender,
-      // vars.maxCollateralToLiquidate,
-      // collateralReserve.liquidityIndex
-    // );
-
-    // If the collateral being liquidated is equal to the user balance,
-    // we set the currency as not being used as collateral anymore
-    if (vars.maxCollateralToLiquidate == vars.userCollateralBalance) {
-      userConfig.setUsingAsCollateral(collateralReserve.id, false);
-      emit ReserveUsedAsCollateralDisabled(collateralAsset, user);
-    }
+      Params.DepositParams(
+        debtAsset,
+        vars.actualDebtToLiquidate,
+        user,
+        STATER_NFT,
+        0,
+        0,
+        true,
+        false
+      ),
+      0);
 
     // Transfers the debt asset being repaid to the aToken, where the liquidity is kept
     IERC20(debtAsset).safeTransferFrom(
       msg.sender,
-      address(0), // @DIIMIIM: nft address //debtReserve.aTokenAddress,
+      STATER_NFT,
       vars.actualDebtToLiquidate
     );
 
@@ -219,8 +205,6 @@ contract LendingPoolCollateralManager is
       vars.maxCollateralToLiquidate,
       msg.sender
     );
-    
-    */
 
     return (uint256(Errors.CollateralManagerErrors.NO_ERROR), Errors.LPCM_NO_ERRORS);
 
@@ -268,7 +252,6 @@ contract LendingPoolCollateralManager is
     vars.collateralPrice = oracle.getAssetPrice(collateralAsset);
     vars.debtAssetPrice = oracle.getAssetPrice(debtAsset);
 
-    /*
     (, , vars.liquidationBonus, vars.collateralDecimals, ) = collateralReserve
       .configuration
       .getParams();
@@ -295,8 +278,6 @@ contract LendingPoolCollateralManager is
       collateralAmount = vars.maxAmountCollateralToLiquidate;
       debtAmountNeeded = debtToCover;
     }
-    
-    */
     
     return (collateralAmount, debtAmountNeeded);
   }
