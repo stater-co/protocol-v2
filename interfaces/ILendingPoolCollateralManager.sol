@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity 0.6.12;
+pragma solidity 0.8.0;
 
 /**
  * @title ILendingPoolCollateralManager
@@ -15,7 +15,7 @@ interface ILendingPoolCollateralManager {
    * @param debtToCover The total amount liquidated
    * @param liquidatedCollateralAmount The amount of collateral being liquidated
    * @param liquidator The address of the liquidator
-   * @param receiveAToken true if the liquidator wants to receive aTokens, false otherwise
+   * receiveAToken true if the liquidator wants to receive aTokens, false otherwise
    **/
   event LiquidationCall(
     address indexed collateral,
@@ -47,7 +47,7 @@ interface ILendingPoolCollateralManager {
    * @param principal The address of the principal reserve
    * @param user The address of the borrower
    * @param debtToCover The amount of principal that the liquidator wants to repay
-   * @param receiveAToken true if the liquidators wants to receive the aTokens, false if
+   * receiveAToken true if the liquidators wants to receive the aTokens, false if
    * he wants to receive the underlying asset directly
    **/
   function liquidationCall(

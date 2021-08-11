@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity >=0.6.12 <=0.8.6;
+pragma solidity 0.8.0;
 
 import {SafeMath} from '../../dependencies/openzeppelin/contracts/utils/math/SafeMath.sol';
 import {IERC20} from '../../dependencies/openzeppelin/contracts/token/ERC20/IERC20.sol';
@@ -94,6 +94,7 @@ contract LendingPoolCollateralManager is
 
     LiquidationCallLocalVars memory vars;
 
+    /*
     (, , , , vars.healthFactor) = GenericLogic.calculateUserAccountData(
       user,
       _reserves,
@@ -216,9 +217,10 @@ contract LendingPoolCollateralManager is
       user,
       vars.actualDebtToLiquidate,
       vars.maxCollateralToLiquidate,
-      msg.sender,
-      receiveAToken
+      msg.sender
     );
+    
+    */
 
     return (uint256(Errors.CollateralManagerErrors.NO_ERROR), Errors.LPCM_NO_ERRORS);
 
@@ -266,6 +268,7 @@ contract LendingPoolCollateralManager is
     vars.collateralPrice = oracle.getAssetPrice(collateralAsset);
     vars.debtAssetPrice = oracle.getAssetPrice(debtAsset);
 
+    /*
     (, , vars.liquidationBonus, vars.collateralDecimals, ) = collateralReserve
       .configuration
       .getParams();
@@ -292,6 +295,9 @@ contract LendingPoolCollateralManager is
       collateralAmount = vars.maxAmountCollateralToLiquidate;
       debtAmountNeeded = debtToCover;
     }
+    
+    */
+    
     return (collateralAmount, debtAmountNeeded);
   }
 }
