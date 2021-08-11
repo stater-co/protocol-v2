@@ -15,6 +15,7 @@ import {Errors} from '../helpers/Errors.sol';
 import {Helpers} from '../helpers/Helpers.sol';
 import {IReserveInterestRateStrategy} from '../../../interfaces/IReserveInterestRateStrategy.sol';
 import {DataTypes} from '../types/DataTypes.sol';
+import {IStaterNft} from '../../../interfaces/IStaterNft.sol';
 
 /**
  * @title ReserveLogic library
@@ -302,10 +303,8 @@ library ValidationLogic {
    */
   function validateRebalanceStableBorrowRate(
     DataTypes.ReserveData storage reserve,
-    //address reserveAddress,
     IERC20 stableDebtToken,
-    IERC20 variableDebtToken //,
-    //address aTokenAddress
+    IERC20 variableDebtToken
   ) external view {
     (bool isActive, , , ) = reserve.configuration.getFlags();
 
@@ -314,7 +313,7 @@ library ValidationLogic {
     //if the usage ratio is below 95%, no rebalances are needed
     uint256 totalDebt =
       stableDebtToken.totalSupply().add(variableDebtToken.totalSupply()).wadToRay();
-    uint256 availableLiquidity = /* IERC20(reserveAddress).balanceOf(aTokenAddress); */ uint256(0).wadToRay(); // @DIIMIIM: get nft liquidity
+    uint256 availableLiquidity = IStaterNft(STATER_NFT).balanceOf().wadToRay();
     uint256 usageRatio = totalDebt == 0 ? 0 : totalDebt.rayDiv(availableLiquidity.add(totalDebt));
 
     //if the liquidity rate is below REBALANCE_UP_THRESHOLD of the max variable APR at 95% usage,

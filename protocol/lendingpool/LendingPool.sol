@@ -384,17 +384,17 @@ contract LendingPool is Params, VersionedInitializable, ILendingPool, LendingPoo
     }
 
     reserve.updateInterestRates(STATER_NFT,
-        DepositParams(
-            asset,
-            0,
-            msg.sender,
-            STATER_NFT,
-            0,
-            0,
-            true,
-            false
-        ),
-      0);
+      DepositParams(
+        asset,
+        0,
+        msg.sender,
+        STATER_NFT,
+        0,
+        0,
+        true,
+        false
+      ),
+    0);
 
     emit Swap(asset, msg.sender, rateMode);
     
@@ -413,24 +413,20 @@ contract LendingPool is Params, VersionedInitializable, ILendingPool, LendingPoo
 
   function rebalanceStableBorrowRate(address asset, address user) external override whenNotPaused {
 
-    /*
     DataTypes.ReserveData storage reserve = _reserves[asset];
 
     IERC20 stableDebtToken = IERC20(reserve.stableDebtTokenAddress);
     IERC20 variableDebtToken = IERC20(reserve.variableDebtTokenAddress);
-    //address aTokenAddress = address(0); // @DIIMIIM: nft address here //reserve.aTokenAddress;
 
     uint256 stableDebt = IERC20(stableDebtToken).balanceOf(user);
 
     ValidationLogic.validateRebalanceStableBorrowRate(
       reserve,
-      //asset,
       stableDebtToken,
-      variableDebtToken //,
-      //aTokenAddress
+      variableDebtToken
     );
 
-    reserve.updateState(STATER_NFT);
+    reserve.updateState();
 
     IStableDebtToken(address(stableDebtToken)).burn(user, stableDebt);
     IStableDebtToken(address(stableDebtToken)).mint(
@@ -440,10 +436,20 @@ contract LendingPool is Params, VersionedInitializable, ILendingPool, LendingPoo
       reserve.currentStableBorrowRate
     );
 
-    reserve.updateInterestRates(STATER_NFT, 0, 0);
+    reserve.updateInterestRates(STATER_NFT,
+      DepositParams(
+        asset,
+        0,
+        user,
+        STATER_NFT,
+        0,
+        0,
+        true,
+        false
+      ),
+    0);
 
     emit RebalanceStableBorrowRate(asset, user);
-    */
   }
 
 
@@ -495,8 +501,7 @@ contract LendingPool is Params, VersionedInitializable, ILendingPool, LendingPoo
     address collateralAsset,
     address debtAsset,
     address user,
-    uint256 debtToCover //,
-    //bool receiveAToken
+    uint256 debtToCover
   ) external override whenNotPaused {
     address collateralManager = _addressesProvider.getLendingPoolCollateralManager();
 
@@ -509,8 +514,7 @@ contract LendingPool is Params, VersionedInitializable, ILendingPool, LendingPoo
           collateralAsset,
           debtAsset,
           user,
-          debtToCover //,
-          //receiveAToken
+          debtToCover
         )
       );
 
