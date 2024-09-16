@@ -27,6 +27,7 @@ contract LendingPoolAddressesProvider is Ownable, ILendingPoolAddressesProvider 
   bytes32 private constant LENDING_POOL_COLLATERAL_MANAGER = 'COLLATERAL_MANAGER';
   bytes32 private constant PRICE_ORACLE = 'PRICE_ORACLE';
   bytes32 private constant LENDING_RATE_ORACLE = 'LENDING_RATE_ORACLE';
+  bytes32 private constant UNISWAP = 'UNISWAP';
 
   constructor(string memory marketId) public {
     _setMarketId(marketId);
@@ -180,6 +181,15 @@ contract LendingPoolAddressesProvider is Ownable, ILendingPoolAddressesProvider 
   function setLendingRateOracle(address lendingRateOracle) external override onlyOwner {
     _addresses[LENDING_RATE_ORACLE] = lendingRateOracle;
     emit LendingRateOracleUpdated(lendingRateOracle);
+  }
+
+  function getUniswap() external view override returns (address) {
+    return getAddress(UNISWAP);
+  }
+
+  function setUniswap(address uniswap) external override onlyOwner {
+    _addresses[UNISWAP] = uniswap;
+    emit LendingRateOracleUpdated(uniswap);
   }
 
   /**

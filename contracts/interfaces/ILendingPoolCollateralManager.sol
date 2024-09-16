@@ -15,7 +15,6 @@ interface ILendingPoolCollateralManager {
    * @param debtToCover The total amount liquidated
    * @param liquidatedCollateralAmount The amount of collateral being liquidated
    * @param liquidator The address of the liquidator
-   * @param receiveAToken true if the liquidator wants to receive aTokens, false otherwise
    **/
   event LiquidationCall(
     address indexed collateral,
@@ -23,8 +22,7 @@ interface ILendingPoolCollateralManager {
     address indexed user,
     uint256 debtToCover,
     uint256 liquidatedCollateralAmount,
-    address liquidator,
-    bool receiveAToken
+    address liquidator
   );
 
   /**
@@ -43,18 +41,17 @@ interface ILendingPoolCollateralManager {
 
   /**
    * @dev Users can invoke this function to liquidate an undercollateralized position.
-   * @param collateral The address of the collateral to liquidated
-   * @param principal The address of the principal reserve
+   * collateral The address of the collateral to liquidated
+   * principal The address of the principal reserve
    * @param user The address of the borrower
-   * @param debtToCover The amount of principal that the liquidator wants to repay
-   * @param receiveAToken true if the liquidators wants to receive the aTokens, false if
+   * debtToCover The amount of principal that the liquidator wants to repay
    * he wants to receive the underlying asset directly
    **/
   function liquidationCall(
-    address collateral,
-    address principal,
+    address collateralAsset,
+    address debtAsset,
     address user,
     uint256 debtToCover,
-    bool receiveAToken
+    uint256 nftId
   ) external returns (uint256, string memory);
 }

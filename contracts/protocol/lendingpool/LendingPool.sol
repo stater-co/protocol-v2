@@ -25,6 +25,9 @@ import {ReserveConfiguration} from '../libraries/configuration/ReserveConfigurat
 import {UserConfiguration} from '../libraries/configuration/UserConfiguration.sol';
 import {DataTypes} from '../libraries/types/DataTypes.sol';
 import {LendingPoolStorage} from './LendingPoolStorage.sol';
+import {IERC721} from '../../dependencies/openzeppelin/contracts/token/ERC721/IERC721.sol';
+import {ERC721Holder} from '../../dependencies/openzeppelin/contracts/token/ERC721/utils/ERC721Holder.sol';
+import {IERC721Receiver} from '../../dependencies/openzeppelin/contracts/token/ERC721/IERC721Receiver.sol';
 
 /**
  * @title LendingPool contract
@@ -43,7 +46,13 @@ import {LendingPoolStorage} from './LendingPoolStorage.sol';
  *   LendingPoolAddressesProvider
  * @author Aave
  **/
-contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage {
+contract LendingPool is 
+  VersionedInitializable, 
+  ILendingPool, 
+  LendingPoolStorage,
+  IERC721Receiver,
+  ERC721Holder 
+{
   using SafeMath for uint256;
   using WadRayMath for uint256;
   using PercentageMath for uint256;
@@ -129,6 +138,42 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
   }
 
   /**
+   * @dev Deposits an `amount` of underlying asset into the reserve, receiving in return overlying aTokens.
+   * - E.g. User deposits 100 USDC and gets in return 100 aUSDC
+   * @param asset The address of the underlying asset to deposit
+   * @param amount The amount to be deposited
+   * @param onBehalfOf The address that will receive the aTokens, same as msg.sender if the user
+   *   wants to receive them on his own wallet, or a different address if the beneficiary of aTokens
+   *   is a different wallet
+   * @param referralCode Code used to register the integrator originating the operation, for potential rewards.
+   *   0 if the action is executed directly by the user, without any middle-man
+   **/
+  function depositNft(
+    address asset, // the address of the currency asset or the address of the nft
+    address onBehalfOf, // the user address, no meanings changed
+    uint16 referralCode, // referral code
+    uint256 nftId // the nft id, used only when amount is 0
+  ) external override whenNotPaused {
+    DataTypes.ReserveData storage reserve = _reserves[asset];
+
+    ValidationLogic.validateDeposit(reserve);
+
+    reserve.updateState();
+
+    IERC721(asset).safeTransferFrom(msg.sender, address(this), nftId);
+
+    // @DIIMIIM: Give Stater nft here
+    //bool isFirstDeposit = IAToken(aToken).mint(onBehalfOf, amount, reserve.liquidityIndex);
+
+    if (isFirstDeposit) {
+      _usersConfig[onBehalfOf].setUsingAsCollateral(reserve.id, true);
+      emit ReserveUsedAsCollateralEnabled(asset, onBehalfOf);
+    }
+
+    emit DepositNft(asset, nftId, msg.sender, onBehalfOf, referralCode);
+  }
+
+  /**
    * @dev Withdraws an `amount` of underlying asset from the reserve, burning the equivalent aTokens owned
    * E.g. User has 100 aUSDC, calls withdraw() and receives 100 USDC, burning the 100 aUSDC
    * @param asset The address of the underlying asset to withdraw
@@ -181,6 +226,44 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
     emit Withdraw(asset, msg.sender, to, amountToWithdraw);
 
     return amountToWithdraw;
+  }
+
+  /**
+   * @dev Withdraws an `amount` of underlying asset from the reserve, burning the equivalent aTokens owned
+   * E.g. User has 100 aUSDC, calls withdraw() and receives 100 USDC, burning the 100 aUSDC
+   * @param asset The address of the underlying asset to withdraw
+   * @param amount The underlying amount to be withdrawn
+   *   - Send the value type(uint256).max in order to withdraw the whole aToken balance
+   * @param to Address that will receive the underlying, same as msg.sender if the user
+   *   wants to receive it on his own wallet, or a different address if the beneficiary is a
+   *   different wallet
+   * @return The final amount withdrawn
+   **/
+  function withdrawNft(
+    address asset,
+    uint256 nftId,
+    address to
+  ) external override whenNotPaused returns (uint256) {
+    DataTypes.ReserveData storage reserve = _reserves[asset];
+
+    ValidationLogic.validateWithdrawNft(
+      asset,
+      userBalance,
+      _reserves,
+      _usersConfig[msg.sender],
+      _reservesList,
+      _reservesCount,
+      _addressesProvider.getPriceOracle()
+    );
+
+    reserve.updateState();
+
+    if (amountToWithdraw == userBalance) {
+      _usersConfig[msg.sender].setUsingAsCollateral(reserve.id, false);
+      emit ReserveUsedAsCollateralDisabled(asset, msg.sender);
+    }
+
+    emit WithdrawNft(asset, msg.sender, to, nftId);
   }
 
   /**

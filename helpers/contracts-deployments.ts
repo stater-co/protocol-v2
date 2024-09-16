@@ -236,7 +236,7 @@ export const deployAaveOracle = async (
 export const deployLendingPoolCollateralManager = async (verify?: boolean) => {
   const collateralManagerImpl = await new LendingPoolCollateralManagerFactory(
     await getFirstSigner()
-  ).deploy();
+  ).deploy(String(await getFirstSigner()),String(await getFirstSigner()));
   await insertContractAddressInDb(
     eContractid.LendingPoolCollateralManagerImpl,
     collateralManagerImpl.address
